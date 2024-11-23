@@ -1,0 +1,26 @@
+{
+  "992818876": {
+    "rssFeeds": [
+      "https://tg.i-c-a.su/rss/modbyliu"
+    ]
+  },
+  "1623457379": {
+    "rssFeeds": [
+      "https://9to5linux.com/feed/atom",
+      "https://www.zdnet.com/topic/linux/rss.xml",
+      "https://www.omgubuntu.co.uk/feed",
+      "https://github.com/burhancodes/materialgram-repo/commits/main.atom"
+    ]
+  },
+  "-1001954387458": {
+    "topicId": 161,
+    "rssFeeds": []
+  },
+  "-1002228180074": {
+    "topicId": 18616,
+    "rssFeeds": [
+      "https://www.reddit.com/r/FDroidUpdates/new.rss",
+      "https://github.com/MoonWalker440/Music-Megathread/commits/main.atom"
+    ]
+  }
+}
