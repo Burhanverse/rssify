@@ -14,7 +14,9 @@
   },
   "-1001954387458": {
     "topicId": 161,
-    "rssFeeds": []
+    "rssFeeds": [
+      "https://www.reddit.com/r/FDroidUpdates/new.rss"
+    ]
   },
   "-1002228180074": {
     "topicId": 18616,

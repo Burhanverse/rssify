@@ -4,12 +4,17 @@ const FeedParser = require('feedparser');
 const fs = require('fs');
 
 // Bot Token
-const BOT_TOKEN = '7884373548:AAHjUAYg6Yexw3vbO00e-wP7I2WlqTFDbSY';
+const BOT_TOKEN = '7423438212:AAEXOhx1jFK8ISg3XsSpyP0XfBXN93eQUkk';
 const bot = new Telegraf(BOT_TOKEN);
 
 // Configuration file
 const CONFIG_FILE = './config.json';
 const LAST_LOG_DIR = './last_logs';
+
+// Ensure LAST_LOG_DIR exists
+if (!fs.existsSync(LAST_LOG_DIR)) {
+  fs.mkdirSync(LAST_LOG_DIR, { recursive: true });
+}
 
 // Load or initialize configuration
 const loadConfig = () => {
