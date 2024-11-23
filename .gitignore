@@ -1,0 +1,8 @@
+last_logs
+node_modules
+chromeportable
+.codebuddy
+.idea
+config.json
+.env
+*.bak
