@@ -133,6 +133,32 @@ bot.command('set', async (ctx) => {
   ctx.reply(`RSS updates will now be sent to this topic (ID: ${topicId}).`);
 });
 
+bot.command('send', async (ctx) => {
+  const chatId = ctx.chat.id.toString();
+  const authorizedUser = process.env.OWNER_ID;
+
+  if (chatId !== authorizedUser) {
+    return ctx.reply('You are not authorized to send emergency messages.');
+  }
+
+  const message = ctx.message.text.split(' ').slice(1).join(' ');
+  if (!message) {
+    return ctx.reply('Usage: /send "your_message"');
+  }
+
+  const subscribers = await chatCollection.find().toArray();
+
+  for (const subscriber of subscribers) {
+    try {
+      await bot.telegram.sendMessage(subscriber.chatId, message, { parse_mode: 'Markdown' });
+    } catch (err) {
+      console.error(`Failed to send message to ${subscriber.chatId}:`, err);
+    }
+  }
+
+  ctx.reply('Emergency message sent to all subscribers.');
+});
+
 // Fetch RSS
 const fetchRss = async (rssUrl) => {
   const items = [];
