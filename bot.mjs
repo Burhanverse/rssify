@@ -68,21 +68,11 @@ bot.start((ctx) => {
   );
 });
 
-bot.command('set', async (ctx) => {
-  const chatId = ctx.chat.id.toString();
-  const topicId = ctx.message.message_thread_id;
-
-  if (!topicId) {
-    return ctx.reply('This command can only be used in a topic.', { parse_mode: 'Markdown' });
-  }
-
-  await chatCollection.updateOne({ chatId }, { $set: { topicId } }, { upsert: true });
-  ctx.reply(`RSS updates will now be sent to this topic (ID: ${topicId}).`);
-});
-
 bot.command('add', async (ctx) => {
   const rssUrl = ctx.message.text.split(' ')[1];
-  if (!rssUrl) return ctx.reply('Usage: /add rss_url', { parse_mode: 'Markdown' });
+  if (!rssUrl) {
+    return ctx.reply('Usage: /add rss_url', { parse_mode: 'HTML' });
+  }
 
   const chatId = ctx.chat.id.toString();
   try {
@@ -108,7 +98,9 @@ bot.command('add', async (ctx) => {
 
 bot.command('del', async (ctx) => {
   const rssUrl = ctx.message.text.split(' ')[1];
-  if (!rssUrl) return ctx.reply('Usage: /del rss_url', { parse_mode: 'Markdown' });
+  if (!rssUrl) {
+    return ctx.reply('Usage: /del rss_url', { parse_mode: 'HTML' });
+  }
 
   const chatId = ctx.chat.id.toString();
   await chatCollection.updateOne({ chatId }, { $pull: { rssFeeds: rssUrl } });
@@ -127,6 +119,18 @@ bot.command('list', async (ctx) => {
 
   const feeds = chat.rssFeeds.map((url, i) => `${i + 1}. <a href="${escapeHTML(url)}">${escapeHTML(url)}</a>`).join('\n');
   ctx.reply(`Your RSS feeds:\n\n${feeds}`, { parse_mode: 'HTML' });
+});
+
+bot.command('set', async (ctx) => {
+  const chatId = ctx.chat.id.toString();
+  const topicId = ctx.message.message_thread_id;
+
+  if (!topicId) {
+    return ctx.reply('This command can only be used in a topic.', { parse_mode: 'HTML' });
+  }
+
+  await chatCollection.updateOne({ chatId }, { $set: { topicId } }, { upsert: true });
+  ctx.reply(`RSS updates will now be sent to this topic (ID: ${topicId}).`);
 });
 
 // Fetch RSS
