@@ -58,8 +58,8 @@ const updateLastLog = async (chatId, rssUrl, lastItemTitle, lastItemLink) => {
 // Bot commands
 bot.start((ctx) => {
   ctx.reply(
-    'Welcome to RSS-ify! Manage RSS feeds directly in Telegram.\n' +
-    'Commands:\n' +
+    'RSS-ify brings you the latest updates from your favorite feeds right into Telegram, hassle-free!\n\n' +
+    'Available Commands:\n' +
     '/add rss_url - Add RSS feed\n' +
     '/del rss_url - Delete RSS feed\n' +
     '/list - List your subscribed RSS feeds\n' +
