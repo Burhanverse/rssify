@@ -90,11 +90,17 @@ bot.command('add', async (ctx) => {
     if (items.length === 0) throw new Error('Empty feed.');
 
     await chatCollection.updateOne({ chatId }, { $addToSet: { rssFeeds: rssUrl } }, { upsert: true });
-
+    ctx.reply(`RSS feed added: <a href="${escapeHTML(rssUrl)}">${escapeHTML(rssUrl)}</a>`, { parse_mode: 'HTML' });
+    
     const latestItem = items[0];
     await updateLastLog(chatId, rssUrl, latestItem.title, latestItem.link);
 
-    ctx.reply(`RSS feed added: <a href="${escapeHTML(rssUrl)}">${escapeHTML(rssUrl)}</a>`, { parse_mode: 'HTML' });
+    const message = `<b>${escapeHTML(latestItem.title)}</b>\n<a href="${escapeHTML(latestItem.link)}">${escapeHTML(latestItem.link)}</a>`;
+    await bot.telegram.sendMessage(chatId, message, {
+      parse_mode: 'HTML',
+      ...(ctx.message.message_thread_id && { message_thread_id: parseInt(ctx.message.message_thread_id) }),
+    });
+    
   } catch (err) {
     ctx.reply(`Failed to add RSS feed: ${escapeHTML(err.message)}`, { parse_mode: 'HTML' });
   }
