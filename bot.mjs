@@ -192,12 +192,21 @@ const sendRssUpdates = async () => {
 
         if (!lastLog || latestItem.title !== lastLog.title || latestItem.link !== lastLog.link) {
           const message = `<b>${escapeHTML(latestItem.title)}</b>\n<a href="${escapeHTML(latestItem.link)}">${escapeHTML(latestItem.link)}</a>`;
-          await bot.telegram.sendMessage(chatId, message, {
-            parse_mode: 'HTML',
-            ...(topicId && { message_thread_id: parseInt(topicId) }),
-          });
+          try {
+            await bot.telegram.sendMessage(chatId, message, {
+              parse_mode: 'HTML',
+              ...(topicId && { message_thread_id: parseInt(topicId) }),
+            });
 
-          await updateLastLog(chatId, rssUrl, latestItem.title, latestItem.link);
+            await updateLastLog(chatId, rssUrl, latestItem.title, latestItem.link);
+          } catch (err) {
+            if (err.response?.error_code === 403 && err.response?.description?.includes('bot was blocked')) {
+              console.warn(`Bot was blocked by user ${chatId}. Removing from database.`);
+              await chatCollection.deleteOne({ chatId });
+            } else {
+              console.error(`Failed to send message to ${chatId}:`, err.message);
+            }
+          }
         }
       } catch (err) {
         console.error(`Failed to process feed ${rssUrl}:`, err.message);
@@ -212,13 +221,13 @@ setInterval(async () => {
   if (isProcessing) return;
   isProcessing = true;
   try {
-    await sendRssUpdates(bot);
+    await sendRssUpdates();
   } catch (err) {
     console.error('Error in sendRssUpdates:', err);
   } finally {
     isProcessing = false;
   }
-}, 30 * 1000); // 30 seconds
+}, 60 * 1000); // 60 seconds
 
 
 // Initialize and Start the bot
