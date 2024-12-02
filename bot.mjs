@@ -86,11 +86,7 @@ bot.command('add', async (ctx) => {
     await updateLastLog(chatId, rssUrl, latestItem.title, latestItem.link);
 
     const message = `<b>${escapeHTML(latestItem.title)}</b>\n<a href="${escapeHTML(latestItem.link)}">${escapeHTML(latestItem.link)}</a>`;
-    await bot.telegram.sendMessage(chatId, message, {
-      parse_mode: 'HTML',
-      ...(ctx.message.message_thread_id && { message_thread_id: parseInt(ctx.message.message_thread_id) }),
-    });
-    
+    await sendMessage(chatId, message, ctx.message.message_thread_id);
   } catch (err) {
     ctx.reply(`Failed to add RSS feed: ${escapeHTML(err.message)}`, { parse_mode: 'HTML' });
   }
@@ -133,6 +129,43 @@ bot.command('set', async (ctx) => {
   ctx.reply(`RSS updates will now be sent to this topic (ID: ${topicId}).`);
 });
 
+bot.command('send', async (ctx) => {
+  const chatId = ctx.chat.id.toString();
+  const authorizedUser = process.env.OWNER_ID;
+
+  if (chatId !== authorizedUser) {
+    return ctx.reply('You are not authorized to send emergency messages.');
+  }
+
+  const message = ctx.message.text.split(' ').slice(1).join(' ');
+  if (!message) {
+    return ctx.reply('Usage: /send "your_message"');
+  }
+
+  const subscribers = await chatCollection.find().toArray();
+
+  for (const subscriber of subscribers) {
+    await sendMessage(subscriber.chatId, message);
+  }
+
+  ctx.reply('Emergency message sent to all subscribers.');
+});
+
+const sendMessage = async (chatId, message, threadId) => {
+  try {
+    await bot.telegram.sendMessage(chatId, message, {
+      parse_mode: 'HTML',
+      ...(threadId && { message_thread_id: parseInt(threadId) }),
+    });
+  } catch (err) {
+    if (err.response?.error_code === 403) {
+      console.warn(`Bot was blocked by the user or group: ${chatId}. Skipping...`);
+    } else {
+      console.error(`Failed to send message to ${chatId}:`, err.message);
+    }
+  }
+};
+
 // Fetch RSS
 const fetchRss = async (rssUrl) => {
   const items = [];
@@ -166,21 +199,9 @@ const sendRssUpdates = async () => {
 
         if (!lastLog || latestItem.title !== lastLog.title || latestItem.link !== lastLog.link) {
           const message = `<b>${escapeHTML(latestItem.title)}</b>\n<a href="${escapeHTML(latestItem.link)}">${escapeHTML(latestItem.link)}</a>`;
-          try {
-            await bot.telegram.sendMessage(chatId, message, {
-              parse_mode: 'HTML',
-              ...(topicId && { message_thread_id: parseInt(topicId) }),
-            });
+          await sendMessage(chatId, message, topicId);
 
-            await updateLastLog(chatId, rssUrl, latestItem.title, latestItem.link);
-          } catch (err) {
-            if (err.response?.error_code === 403 && err.response?.description?.includes('bot was blocked')) {
-              console.warn(`Bot was blocked by user ${chatId}. Removing from database.`);
-              await chatCollection.deleteOne({ chatId });
-            } else {
-              console.error(`Failed to send message to ${chatId}:`, err.message);
-            }
-          }
+          await updateLastLog(chatId, rssUrl, latestItem.title, latestItem.link);
         }
       } catch (err) {
         console.error(`Failed to process feed ${rssUrl}:`, err.message);
@@ -195,14 +216,22 @@ setInterval(async () => {
   if (isProcessing) return;
   isProcessing = true;
   try {
-    await sendRssUpdates();
+    await sendRssUpdates(bot);
   } catch (err) {
     console.error('Error in sendRssUpdates:', err);
   } finally {
     isProcessing = false;
   }
-}, 60 * 1000); // 60 seconds
+}, 30 * 1000); // 30 seconds
 
+// Global Error Handlers
+process.on('uncaughtException', (err) => {
+  console.error('Unhandled Exception:', err);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
 
 // Initialize and Start the bot
 (async () => {
