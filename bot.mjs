@@ -18,9 +18,6 @@ const client = new MongoClient(MONGO_URI);
 
 let db, chatCollection, logCollection;
 
-const CONFIG_FILE = './config.json';
-const LAST_LOG_DIR = './last_logs';
-
 async function initDatabase() {
   await client.connect();
   db = client.db(DATABASE_NAME);
@@ -85,7 +82,8 @@ bot.command('add', async (ctx) => {
     const latestItem = items[0];
     await updateLastLog(chatId, rssUrl, latestItem.title, latestItem.link);
 
-    const message = `<b>${escapeHTML(latestItem.title)}</b>\n<a href="${escapeHTML(latestItem.link)}">${escapeHTML(latestItem.link)}</a>`;
+    const message = `<b>${escapeHTML(latestItem.title)}</b>\n\n` +
+          `<a href="${escapeHTML(latestItem.link)}"><i>Source</i></a>`;
     await bot.telegram.sendMessage(chatId, message, {
       parse_mode: 'HTML',
       ...(ctx.message.message_thread_id && { message_thread_id: parseInt(ctx.message.message_thread_id) }),
@@ -191,7 +189,8 @@ const sendRssUpdates = async () => {
         const lastLog = await getLastLog(chatId, rssUrl);
 
         if (!lastLog || latestItem.title !== lastLog.title || latestItem.link !== lastLog.link) {
-          const message = `<b>${escapeHTML(latestItem.title)}</b>\n<a href="${escapeHTML(latestItem.link)}">${escapeHTML(latestItem.link)}</a>`;
+          const message = `<b>${escapeHTML(latestItem.title)}</b>\n\n` +
+          `<a href="${escapeHTML(latestItem.link)}"><i>Source</i></a>`;
 
           await bot.telegram.sendMessage(chatId, message, {
             parse_mode: 'HTML',
@@ -230,7 +229,7 @@ setInterval(async () => {
   } finally {
     isProcessing = false;
   }
-}, 30 * 1000); // 30 seconds
+}, 80 * 1000); // 80 seconds
 
 
 // Initialize and Start the bot
