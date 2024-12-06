@@ -19,12 +19,17 @@ const client = new MongoClient(MONGO_URI);
 let db, chatCollection, logCollection, spamCollection;
 
 async function initDatabase() {
-  await client.connect();
-  db = client.db(DATABASE_NAME);
-  chatCollection = db.collection('chats');
-  logCollection = db.collection('logs');
-  spamCollection = db.collection('spam');
-  console.log('Connected to MongoDB');
+  try {
+    await client.connect();
+    db = client.db(DATABASE_NAME);
+    chatCollection = db.collection('chats');
+    logCollection = db.collection('logs');
+    spamCollection = db.collection('spam');
+    console.log('Connected to MongoDB');
+  } catch (err) {
+    console.error('Failed to connect to MongoDB:', err.message);
+    process.exit(1);
+  }
 }
 
 const escapeHTML = (text) => {
@@ -55,65 +60,49 @@ const updateLastLog = async (chatId, rssUrl, lastItemTitle, lastItemLink) => {
 
 // Spam protection middleware
 const spamProtection = async (ctx, next) => {
-  const userId = ctx.from.id.toString();
-  const command = ctx.message.text.split(' ')[0];
-  const now = new Date();
+  try {
+    const userId = ctx.from.id.toString();
+    const command = ctx.message.text.split(' ')[0];
+    const now = new Date();
 
-  // Check if the user is blocked
-  const user = await spamCollection.findOne({ userId });
-  if (user?.blockUntil && new Date(user.blockUntil) > now) {
-    return ctx.reply('You have been blocked for 24 hours for repeated spamming. Comeback after the cooldown ends and avoid spamming in the future.');
-  }
-
-  // Record command usage
-  await spamCollection.updateOne(
-    { userId },
-    { 
-      $setOnInsert: { warnings: 0 },
-      $push: { commands: { command, timestamp: now } },
-    },
-    { upsert: true }
-  );
-
-  // Check for spamming
-  const spamCheck = await spamCollection.findOne({ userId });
-  const recentCommands = spamCheck.commands.filter(cmd =>
-    cmd.command === command &&
-    new Date(cmd.timestamp) > new Date(now.getTime() - 60 * 1000) // Last 60 seconds
-  );
-
-  if (recentCommands.length > 3) {
-    if (spamCheck.warnings >= 3) {
-      // Block the user
-      await spamCollection.updateOne(
-        { userId },
-        { $set: { blockUntil: new Date(now.getTime() + 24 * 60 * 60 * 1000) } } // Block for 24 hours
-      );
-      return ctx.reply('You have been blocked for 24 hours for repeated spamming.');
-    } else {
-      // Warn the user
-      await spamCollection.updateOne({ userId }, { $inc: { warnings: 1 } });
-      return ctx.reply(`Please stop spamming commands. This is your ${spamCheck.warnings + 1}/3 warning.`);
+    // Retrieve spam data
+    const user = await spamCollection.findOne({ userId });
+    if (user?.blockUntil && new Date(user.blockUntil) > now) {
+      return ctx.reply('You are blocked for spamming. Wait until the cooldown expires.');
     }
+
+    // Update usage and check for spam
+    const recentCommands = (user?.commands || []).filter(cmd => 
+      cmd.command === command && new Date(cmd.timestamp) > now - 60 * 1000
+    );
+
+    if (recentCommands.length >= 3) {
+      const warnings = (user?.warnings || 0) + 1;
+
+      if (warnings >= 3) {
+        await spamCollection.updateOne({ userId }, { 
+          $set: { blockUntil: new Date(now.getTime() + 24 * 60 * 60 * 1000) },
+          $unset: { commands: '' }
+        });
+        return ctx.reply('You are blocked for 24 hours for repeated spamming.');
+      } else {
+        await spamCollection.updateOne({ userId }, { $set: { warnings }, $push: { commands: { command, timestamp: now } } });
+        return ctx.reply(`Stop spamming. Warning ${warnings}/3.`);
+      }
+    }
+
+    // Allow the user to proceed
+    await spamCollection.updateOne(
+      { userId },
+      { $push: { commands: { command, timestamp: now } }, $setOnInsert: { warnings: 0 } },
+      { upsert: true }
+    );
+    next();
+  } catch (err) {
+    console.error('Spam protection failed:', err.message);
+    next();
   }
-
-  // Proceed to the next middleware
-  next();
 };
-
-// Cleanup spam records periodically
-const cleanUpSpamRecords = async () => {
-  const now = new Date();
-  await spamCollection.updateMany(
-    { blockUntil: { $lte: now } },
-    { $unset: { blockUntil: '' } }
-  );
-  await spamCollection.updateMany(
-    {},
-    { $pull: { commands: { timestamp: { $lte: new Date(now.getTime() - 60 * 1000) } } } } // Remove commands older than 60 seconds
-  );
-};
-setInterval(cleanUpSpamRecords, 60 * 1000); // Cleanup every minute
 
 // Bot commands
 bot.start(spamProtection, (ctx) => {
