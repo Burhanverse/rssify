@@ -9,8 +9,8 @@
     "telegraf": "^4.16.3"
   },
   "name": "rssify",
-  "version": "3.1.2",
-  "description": "RSS-ify is a lightweight telegram bot written in Javascript and powered by NodeJS™, that helps you stay updated by delivering content from your favorite RSS feeds directly to your group chat or in private. Customize, organize, and manage your RSS subscriptions effortlessly!",
+  "version": "3.1.3",
+  "description": "RSS-ify brings you the latest updates from your favorite feeds right into Telegram, hassle-free!",
   "main": "bot.mjs",
   "scripts": {
     "start": "npm install && node bot.mjs"
@@ -20,7 +20,7 @@
     "url": "git+https://github.com/Burhanverse/rssify.git"
   },
   "author": "Burhanverse",
-  "license": "MIT",
+  "license": "BSPL - Proprietary License",
   "bugs": {
     "url": "https://github.com/Burhanverse/rssify/issues"
   },
