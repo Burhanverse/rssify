@@ -16,13 +16,14 @@ const DATABASE_NAME = process.env.DB_NAME || 'rssify';
 const bot = new Telegraf(BOT_TOKEN);
 const client = new MongoClient(MONGO_URI);
 
-let db, chatCollection, logCollection;
+let db, chatCollection, logCollection, spamCollection;
 
 async function initDatabase() {
   await client.connect();
   db = client.db(DATABASE_NAME);
   chatCollection = db.collection('chats');
   logCollection = db.collection('logs');
+  spamCollection = db.collection('spam');
   console.log('Connected to MongoDB');
 }
 
@@ -52,8 +53,70 @@ const updateLastLog = async (chatId, rssUrl, lastItemTitle, lastItemLink) => {
   );
 };
 
+// Spam protection middleware
+const spamProtection = async (ctx, next) => {
+  const userId = ctx.from.id.toString();
+  const command = ctx.message.text.split(' ')[0];
+  const now = new Date();
+
+  // Check if the user is blocked
+  const user = await spamCollection.findOne({ userId });
+  if (user?.blockUntil && new Date(user.blockUntil) > now) {
+    return ctx.reply('You have been blocked for 24 hours for repeated spamming. Comeback after the cooldown ends and avoid spamming in the future.');
+  }
+
+  // Record command usage
+  await spamCollection.updateOne(
+    { userId },
+    { 
+      $setOnInsert: { warnings: 0 },
+      $push: { commands: { command, timestamp: now } },
+    },
+    { upsert: true }
+  );
+
+  // Check for spamming
+  const spamCheck = await spamCollection.findOne({ userId });
+  const recentCommands = spamCheck.commands.filter(cmd =>
+    cmd.command === command &&
+    new Date(cmd.timestamp) > new Date(now.getTime() - 60 * 1000) // Last 60 seconds
+  );
+
+  if (recentCommands.length > 3) {
+    if (spamCheck.warnings >= 3) {
+      // Block the user
+      await spamCollection.updateOne(
+        { userId },
+        { $set: { blockUntil: new Date(now.getTime() + 24 * 60 * 60 * 1000) } } // Block for 24 hours
+      );
+      return ctx.reply('You have been blocked for 24 hours for repeated spamming.');
+    } else {
+      // Warn the user
+      await spamCollection.updateOne({ userId }, { $inc: { warnings: 1 } });
+      return ctx.reply(`Please stop spamming commands. This is your ${spamCheck.warnings + 1}/3 warning.`);
+    }
+  }
+
+  // Proceed to the next middleware
+  next();
+};
+
+// Cleanup spam records periodically
+const cleanUpSpamRecords = async () => {
+  const now = new Date();
+  await spamCollection.updateMany(
+    { blockUntil: { $lte: now } },
+    { $unset: { blockUntil: '' } }
+  );
+  await spamCollection.updateMany(
+    {},
+    { $pull: { commands: { timestamp: { $lte: new Date(now.getTime() - 60 * 1000) } } } } // Remove commands older than 60 seconds
+  );
+};
+setInterval(cleanUpSpamRecords, 60 * 1000); // Cleanup every minute
+
 // Bot commands
-bot.start((ctx) => {
+bot.start(spamProtection, (ctx) => {
   ctx.reply(
     'RSS-ify brings you the latest updates from your favorite feeds right into Telegram, hassle-free!\n\n' +
     'Available Commands:\n' +
@@ -65,7 +128,7 @@ bot.start((ctx) => {
   );
 });
 
-bot.command('add', async (ctx) => {
+bot.command('add', spamProtection, async (ctx) => {
   const rssUrl = ctx.message.text.split(' ')[1];
   if (!rssUrl) {
     return ctx.reply('Usage: /add rss_url', { parse_mode: 'HTML' });
@@ -94,7 +157,7 @@ bot.command('add', async (ctx) => {
   }
 });
 
-bot.command('del', async (ctx) => {
+bot.command('del', spamProtection, async (ctx) => {
   const rssUrl = ctx.message.text.split(' ')[1];
   if (!rssUrl) {
     return ctx.reply('Usage: /del rss_url', { parse_mode: 'HTML' });
@@ -107,7 +170,7 @@ bot.command('del', async (ctx) => {
   ctx.reply(`RSS feed removed: <a href="${escapeHTML(rssUrl)}">${escapeHTML(rssUrl)}</a>`, { parse_mode: 'HTML' });
 });
 
-bot.command('list', async (ctx) => {
+bot.command('list', spamProtection, async (ctx) => {
   const chatId = ctx.chat.id.toString();
   const chat = await chatCollection.findOne({ chatId });
 
@@ -119,7 +182,7 @@ bot.command('list', async (ctx) => {
   ctx.reply(`Your RSS feeds:\n\n${feeds}`, { parse_mode: 'HTML' });
 });
 
-bot.command('set', async (ctx) => {
+bot.command('set', spamProtection, async (ctx) => {
   const chatId = ctx.chat.id.toString();
   const topicId = ctx.message.message_thread_id;
 
@@ -131,7 +194,7 @@ bot.command('set', async (ctx) => {
   ctx.reply(`RSS updates will now be sent to this topic (ID: ${topicId}).`);
 });
 
-bot.command('send', async (ctx) => {
+bot.command('send', spamProtection, async (ctx) => {
   const chatId = ctx.chat.id.toString();
   const authorizedUser = process.env.OWNER_ID;
 
