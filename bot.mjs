@@ -209,6 +209,39 @@ bot.command('send', async (ctx) => {
   ctx.reply('Emergency message forwarded to all subscribers.');
 });
 
+const getBotDetails = () => {
+  const packageJsonPath = path.resolve('./package.json');
+  try {
+    const packageData = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
+    return {
+      version: packageData.version,
+      description: packageData.description || 'RSS-ify Telegram Bot',
+      author: packageData.author || 'Unknown',
+      license: packageData.license || 'N/A',
+    };
+  } catch (err) {
+    console.error('Failed to read package.json:', err.message);
+    return {
+      version: 'Unknown',
+      description: 'RSS-ify brings you the latest updates from your favorite feeds right into Telegram, hassle-free!',
+      author: 'Burhanverse',
+      license: 'BSPL - Proprietary License',
+    };
+  }
+};
+
+// About command
+bot.command('about', async (ctx) => {
+  const { version, description, author, license } = getBotDetails();
+  const message = 
+    '<b>RSS-ify Version:</b> <i>' + escapeHTML(version) + '</i>\n\n' +
+    '<b>Description:</b> <i>' + escapeHTML(description) + '</i>\n' +
+    '<b>Author:</b> <i>' + escapeHTML(author) + '</i>\n' +
+    '<b>License:</b> <i>' + escapeHTML(license) + '</i>';
+
+  ctx.reply(message, { parse_mode: 'HTML' });
+});
+
 // Fetch RSS
 const fetchRss = async (rssUrl) => {
   const items = [];
