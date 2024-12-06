@@ -183,7 +183,7 @@ bot.command('set', spamProtection, async (ctx) => {
   ctx.reply(`RSS updates will now be sent to this topic (ID: ${topicId}).`);
 });
 
-bot.command('send', spamProtection, async (ctx) => {
+bot.command('send', async (ctx) => {
   const chatId = ctx.chat.id.toString();
   const authorizedUser = process.env.OWNER_ID;
 
@@ -191,22 +191,22 @@ bot.command('send', spamProtection, async (ctx) => {
     return ctx.reply('You are not authorized to send emergency messages.');
   }
 
-  const message = ctx.message.text.split(' ').slice(1).join(' ');
-  if (!message) {
-    return ctx.reply('Usage: /send "your_message"');
+  const originalMessage = ctx.message.reply_to_message;
+  if (!originalMessage) {
+    return ctx.reply('Please reply to the message you want to forward.');
   }
 
   const subscribers = await chatCollection.find().toArray();
 
   for (const subscriber of subscribers) {
     try {
-      await bot.telegram.sendMessage(subscriber.chatId, message, { parse_mode: 'Markdown' });
+      await bot.telegram.forwardMessage(subscriber.chatId, chatId, originalMessage.message_id);
     } catch (err) {
       console.error(`Failed to send message to ${subscriber.chatId}:`, err);
     }
   }
 
-  ctx.reply('Emergency message sent to all subscribers.');
+  ctx.reply('Emergency message forwarded to all subscribers.');
 });
 
 // Fetch RSS
