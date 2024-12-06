@@ -104,19 +104,43 @@ const spamProtection = async (ctx, next) => {
   }
 };
 
-// Bot commands
+// Middleware for about cmd
+const getBotDetails = () => {
+  const packageJsonPath = path.resolve('./package.json');
+  try {
+    const packageData = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
+    return {
+      version: packageData.version,
+      description: packageData.description || 'RSS-ify Telegram Bot',
+      author: packageData.author || 'Unknown',
+      license: packageData.license || 'N/A',
+    };
+  } catch (err) {
+    console.error('Failed to read package.json:', err.message);
+    return {
+      version: 'Unknown',
+      description: 'RSS-ify brings you the latest updates from your favorite feeds right into Telegram, hassle-free!',
+      author: 'Burhanverse',
+      license: 'BSPL - Proprietary License',
+    };
+  }
+};
+
+// Bot start command
 bot.start(spamProtection, (ctx) => {
   ctx.reply(
     'RSS-ify brings you the latest updates from your favorite feeds right into Telegram, hassle-free!\n\n' +
     'Available Commands:\n' +
-    '/add rss_url - Add RSS feed\n' +
-    '/del rss_url - Delete RSS feed\n' +
-    '/list - List your subscribed RSS feeds\n' +
-    '/set - Set topic for RSS updates (group only)',
+    '/add FeedURL - Add a feed\n' +
+    '/del FeedURL - Delete a feed\n' +
+    '/list - List of your subscribed feeds\n' +
+    '/set - Set topic for RSS updates (group only)\n' +
+    '/about - About RSS-ify version, description, etc...',
     { parse_mode: 'HTML' }
   );
 });
 
+// Add command 
 bot.command('add', spamProtection, async (ctx) => {
   const rssUrl = ctx.message.text.split(' ')[1];
   if (!rssUrl) {
@@ -146,6 +170,7 @@ bot.command('add', spamProtection, async (ctx) => {
   }
 });
 
+// Delete command 
 bot.command('del', spamProtection, async (ctx) => {
   const rssUrl = ctx.message.text.split(' ')[1];
   if (!rssUrl) {
@@ -159,6 +184,7 @@ bot.command('del', spamProtection, async (ctx) => {
   ctx.reply(`RSS feed removed: <a href="${escapeHTML(rssUrl)}">${escapeHTML(rssUrl)}</a>`, { parse_mode: 'HTML' });
 });
 
+// List command 
 bot.command('list', spamProtection, async (ctx) => {
   const chatId = ctx.chat.id.toString();
   const chat = await chatCollection.findOne({ chatId });
@@ -171,6 +197,7 @@ bot.command('list', spamProtection, async (ctx) => {
   ctx.reply(`Your RSS feeds:\n\n${feeds}`, { parse_mode: 'HTML' });
 });
 
+// Set command 
 bot.command('set', spamProtection, async (ctx) => {
   const chatId = ctx.chat.id.toString();
   const topicId = ctx.message.message_thread_id;
@@ -183,6 +210,7 @@ bot.command('set', spamProtection, async (ctx) => {
   ctx.reply(`RSS updates will now be sent to this topic (ID: ${topicId}).`);
 });
 
+// Send command (owner only)
 bot.command('send', async (ctx) => {
   const chatId = ctx.chat.id.toString();
   const authorizedUser = process.env.OWNER_ID;
@@ -209,29 +237,8 @@ bot.command('send', async (ctx) => {
   ctx.reply('Emergency message forwarded to all subscribers.');
 });
 
-const getBotDetails = () => {
-  const packageJsonPath = path.resolve('./package.json');
-  try {
-    const packageData = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
-    return {
-      version: packageData.version,
-      description: packageData.description || 'RSS-ify Telegram Bot',
-      author: packageData.author || 'Unknown',
-      license: packageData.license || 'N/A',
-    };
-  } catch (err) {
-    console.error('Failed to read package.json:', err.message);
-    return {
-      version: 'Unknown',
-      description: 'RSS-ify brings you the latest updates from your favorite feeds right into Telegram, hassle-free!',
-      author: 'Burhanverse',
-      license: 'BSPL - Proprietary License',
-    };
-  }
-};
-
 // About command
-bot.command('about', async (ctx) => {
+bot.command('about', spamProtection, async (ctx) => {
   const { version, description, author, license } = getBotDetails();
   const message = 
     '<b>RSS-ify Version:</b> <i>' + escapeHTML(version) + '</i>\n\n' +
