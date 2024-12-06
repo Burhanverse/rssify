@@ -1,5 +1,6 @@
 last_logs
 node_modules
+chromeportable
 config.json
 .env
 *.bak
