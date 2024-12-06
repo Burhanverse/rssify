@@ -9,7 +9,7 @@
     "telegraf": "^4.16.3"
   },
   "name": "rssify",
-  "version": "3.1.0",
+  "version": "3.1.2",
   "description": "RSS-ify is a lightweight telegram bot written in Javascript and powered by NodeJS™, that helps you stay updated by delivering content from your favorite RSS feeds directly to your group chat or in private. Customize, organize, and manage your RSS subscriptions effortlessly!",
   "main": "bot.mjs",
   "scripts": {
