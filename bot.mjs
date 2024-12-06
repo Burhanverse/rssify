@@ -72,7 +72,7 @@ const spamProtection = async (ctx, next) => {
     }
 
     // Update usage and check for spam
-    const recentCommands = (user?.commands || []).filter(cmd => 
+    const recentCommands = (user?.commands || []).filter(cmd =>
       cmd.command === command && new Date(cmd.timestamp) > now - 60 * 1000
     );
 
@@ -80,7 +80,7 @@ const spamProtection = async (ctx, next) => {
       const warnings = (user?.warnings || 0) + 1;
 
       if (warnings >= 3) {
-        await spamCollection.updateOne({ userId }, { 
+        await spamCollection.updateOne({ userId }, {
           $set: { blockUntil: new Date(now.getTime() + 24 * 60 * 60 * 1000) },
           $unset: { commands: '' }
         });
@@ -129,13 +129,13 @@ const getBotDetails = () => {
 // Bot start command
 bot.start(spamProtection, (ctx) => {
   ctx.reply(
-    'RSS-ify brings you the latest updates from your favorite feeds right into Telegram, hassle-free!\n\n' +
-    'Available Commands:\n' +
-    '/add FeedURL - Add a feed\n' +
-    '/del FeedURL - Delete a feed\n' +
-    '/list - List of your subscribed feeds\n' +
-    '/set - Set topic for RSS updates (group only)\n' +
-    '/about - About RSS-ify version, description, etc...',
+    '<i>RSS-ify brings you the latest updates from your favorite feeds right into Telegram, hassle-free!</i>\n\n' +
+    '<b>Available Commands:</b>\n' +
+    '/add FeedURL - <i>Add a feed</i>\n' +
+    '/del FeedURL - <i>Delete a feed</i>\n' +
+    '/list - <i>List of your subscribed feeds</i>\n' +
+    '/set - <i>Set topic for RSS updates (group only)</i>\n' +
+    '/about - <i>About RSS-ify version, description, etc...</i>',
     { parse_mode: 'HTML' }
   );
 });
@@ -154,17 +154,17 @@ bot.command('add', spamProtection, async (ctx) => {
 
     await chatCollection.updateOne({ chatId }, { $addToSet: { rssFeeds: rssUrl } }, { upsert: true });
     ctx.reply(`RSS feed added: <a href="${escapeHTML(rssUrl)}">${escapeHTML(rssUrl)}</a>`, { parse_mode: 'HTML' });
-    
+
     const latestItem = items[0];
     await updateLastLog(chatId, rssUrl, latestItem.title, latestItem.link);
 
     const message = `<b>${escapeHTML(latestItem.title)}</b>\n\n` +
-          `<a href="${escapeHTML(latestItem.link)}">𝘚𝘰𝘶𝘳𝘤𝘦</a>`;
+      `<a href="${escapeHTML(latestItem.link)}">𝘚𝘰𝘶𝘳𝘤𝘦</a>`;
     await bot.telegram.sendMessage(chatId, message, {
       parse_mode: 'HTML',
       ...(ctx.message.message_thread_id && { message_thread_id: parseInt(ctx.message.message_thread_id) }),
     });
-    
+
   } catch (err) {
     ctx.reply(`Failed to add RSS feed: ${escapeHTML(err.message)}`, { parse_mode: 'HTML' });
   }
@@ -240,7 +240,7 @@ bot.command('send', async (ctx) => {
 // About command
 bot.command('about', spamProtection, async (ctx) => {
   const { version, description, author, license } = getBotDetails();
-  const message = 
+  const message =
     '<b>RSS-ify Version:</b> <i>' + escapeHTML(version) + '</i>\n\n' +
     '<b>Description:</b> <i>' + escapeHTML(description) + '</i>\n' +
     '<b>Author:</b> <i>' + escapeHTML(author) + '</i>\n' +
@@ -282,7 +282,7 @@ const sendRssUpdates = async () => {
 
         if (!lastLog || latestItem.title !== lastLog.title || latestItem.link !== lastLog.link) {
           const message = `<b>${escapeHTML(latestItem.title)}</b>\n\n` +
-          `<a href="${escapeHTML(latestItem.link)}">𝘚𝘰𝘶𝘳𝘤𝘦</a>`;
+            `<a href="${escapeHTML(latestItem.link)}">𝘚𝘰𝘶𝘳𝘤𝘦</a>`;
 
           await bot.telegram.sendMessage(chatId, message, {
             parse_mode: 'HTML',
@@ -290,7 +290,6 @@ const sendRssUpdates = async () => {
           }).catch(async (error) => {
             if (error.on?.payload?.chat_id) {
               console.error(`Failed to send message to chat ID: ${error.on.payload.chat_id}`);
-              
               // Remove the chatId from the database
               await chatCollection.deleteOne({ chatId });
               console.log('Deleted chat from database:', error.on.payload.chat_id);
