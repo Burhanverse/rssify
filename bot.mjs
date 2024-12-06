@@ -135,7 +135,7 @@ bot.command('add', spamProtection, async (ctx) => {
     await updateLastLog(chatId, rssUrl, latestItem.title, latestItem.link);
 
     const message = `<b>${escapeHTML(latestItem.title)}</b>\n\n` +
-          `<a href="${escapeHTML(latestItem.link)}"><i>Source</i></a>`;
+          `<a href="${escapeHTML(latestItem.link)}">𝘚𝘰𝘶𝘳𝘤𝘦</a>`;
     await bot.telegram.sendMessage(chatId, message, {
       parse_mode: 'HTML',
       ...(ctx.message.message_thread_id && { message_thread_id: parseInt(ctx.message.message_thread_id) }),
@@ -242,7 +242,7 @@ const sendRssUpdates = async () => {
 
         if (!lastLog || latestItem.title !== lastLog.title || latestItem.link !== lastLog.link) {
           const message = `<b>${escapeHTML(latestItem.title)}</b>\n\n` +
-          `<a href="${escapeHTML(latestItem.link)}"><i>Source</i></a>`;
+          `<a href="${escapeHTML(latestItem.link)}">𝘚𝘰𝘶𝘳𝘤𝘦</a>`;
 
           await bot.telegram.sendMessage(chatId, message, {
             parse_mode: 'HTML',
@@ -259,7 +259,6 @@ const sendRssUpdates = async () => {
             }
           });
 
-          // Update the last log after successfully sending the message
           await updateLastLog(chatId, rssUrl, latestItem.title, latestItem.link);
         }
       } catch (err) {
