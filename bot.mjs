@@ -262,11 +262,10 @@ bot.command('ping', spamProtection, isAdmin, async (ctx) => {
   const start = Date.now();
   try {
     const sentMessage = await ctx.reply('𝘗𝘰𝘯𝘨! 𝘊𝘩𝘦𝘤𝘬𝘪𝘯𝘨 𝘱𝘪𝘯𝘨...');
-
+    // Calculate the ping
+    const ping = Date.now() - start;
     // Wait for 2 seconds before editing the message
     await new Promise((resolve) => setTimeout(resolve, 2000));
-    const end = Date.now();
-    const ping = end - start;
     await ctx.telegram.editMessageText(
       ctx.chat.id,
       sentMessage.message_id,
@@ -274,7 +273,6 @@ bot.command('ping', spamProtection, isAdmin, async (ctx) => {
       `𝘗𝘪𝘯𝘨: ${ping} ms`
     );
   } catch (err) {
-    // If error occurs,
     try {
       await ctx.telegram.editMessageText(
         ctx.chat.id,
