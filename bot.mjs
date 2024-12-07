@@ -144,7 +144,7 @@ bot.start(spamProtection, (ctx) => {
 bot.command('add', spamProtection, async (ctx) => {
   const rssUrl = ctx.message.text.split(' ')[1];
   if (!rssUrl) {
-    return ctx.reply('Usage: /add rss_url', { parse_mode: 'HTML' });
+    return ctx.reply('Usage: /𝘢𝘥𝘥 𝘳𝘴𝘴_𝘶𝘳𝘭', { parse_mode: 'HTML' });
   }
 
   const chatId = ctx.chat.id.toString();
@@ -153,7 +153,7 @@ bot.command('add', spamProtection, async (ctx) => {
     if (items.length === 0) throw new Error('Empty feed.');
 
     await chatCollection.updateOne({ chatId }, { $addToSet: { rssFeeds: rssUrl } }, { upsert: true });
-    ctx.reply(`RSS feed added: <a href="${escapeHTML(rssUrl)}">${escapeHTML(rssUrl)}</a>`, { parse_mode: 'HTML' });
+    ctx.reply(`𝘙𝘚𝘚 𝘧𝘦𝘦𝘥 𝘢𝘥𝘥𝘦𝘥: <a href="${escapeHTML(rssUrl)}">${escapeHTML(rssUrl)}</a>`, { parse_mode: 'HTML' });
 
     const latestItem = items[0];
     await updateLastLog(chatId, rssUrl, latestItem.title, latestItem.link);
@@ -166,7 +166,7 @@ bot.command('add', spamProtection, async (ctx) => {
     });
 
   } catch (err) {
-    ctx.reply(`Failed to add RSS feed: ${escapeHTML(err.message)}`, { parse_mode: 'HTML' });
+    ctx.reply(`𝘍𝘢𝘪𝘭𝘦𝘥 𝘵𝘰 𝘢𝘥𝘥 𝘙𝘚𝘚 𝘧𝘦𝘦𝘥: ${escapeHTML(err.message)}`, { parse_mode: 'HTML' });
   }
 });
 
@@ -174,14 +174,14 @@ bot.command('add', spamProtection, async (ctx) => {
 bot.command('del', spamProtection, async (ctx) => {
   const rssUrl = ctx.message.text.split(' ')[1];
   if (!rssUrl) {
-    return ctx.reply('Usage: /del rss_url', { parse_mode: 'HTML' });
+    return ctx.reply('Usage: /𝘥𝘦𝘭 𝘳𝘴𝘴_𝘶𝘳𝘭', { parse_mode: 'HTML' });
   }
 
   const chatId = ctx.chat.id.toString();
   await chatCollection.updateOne({ chatId }, { $pull: { rssFeeds: rssUrl } });
   await logCollection.deleteOne({ chatId, rssUrl });
 
-  ctx.reply(`RSS feed removed: <a href="${escapeHTML(rssUrl)}">${escapeHTML(rssUrl)}</a>`, { parse_mode: 'HTML' });
+  ctx.reply(`𝘙𝘚𝘚 𝘧𝘦𝘦𝘥 𝘳𝘦𝘮𝘰𝘷𝘦𝘥: <a href="${escapeHTML(rssUrl)}">${escapeHTML(rssUrl)}</a>`, { parse_mode: 'HTML' });
 });
 
 // List command 
@@ -190,11 +190,11 @@ bot.command('list', spamProtection, async (ctx) => {
   const chat = await chatCollection.findOne({ chatId });
 
   if (!chat?.rssFeeds?.length) {
-    return ctx.reply('No RSS feeds added.', { parse_mode: 'Markdown' });
+    return ctx.reply('𝘕𝘰 𝘙𝘚𝘚 𝘧𝘦𝘦𝘥𝘴 𝘢𝘥𝘥𝘦𝘥.', { parse_mode: 'Markdown' });
   }
 
   const feeds = chat.rssFeeds.map((url, i) => `${i + 1}. <a href="${escapeHTML(url)}">${escapeHTML(url)}</a>`).join('\n');
-  ctx.reply(`Your RSS feeds:\n\n${feeds}`, { parse_mode: 'HTML' });
+  ctx.reply(`𝘠𝘰𝘶𝘳 𝘴𝘶𝘣𝘴𝘤𝘳𝘪𝘣𝘦𝘥 𝘧𝘦𝘦𝘥𝘴:\n\n${feeds}`, { parse_mode: 'HTML' });
 });
 
 // Set command 
@@ -203,11 +203,11 @@ bot.command('set', spamProtection, async (ctx) => {
   const topicId = ctx.message.message_thread_id;
 
   if (!topicId) {
-    return ctx.reply('This command can only be used in a topic.', { parse_mode: 'HTML' });
+    return ctx.reply('𝘛𝘩𝘪𝘴 𝘤𝘰𝘮𝘮𝘢𝘯𝘥 𝘤𝘢𝘯 𝘰𝘯𝘭𝘺 𝘣𝘦 𝘶𝘴𝘦𝘥 𝘪𝘯 𝘢 𝘵𝘰𝘱𝘪𝘤.', { parse_mode: 'HTML' });
   }
 
   await chatCollection.updateOne({ chatId }, { $set: { topicId } }, { upsert: true });
-  ctx.reply(`RSS updates will now be sent to this topic (ID: ${topicId}).`);
+  ctx.reply(`𝘙𝘚𝘚 𝘶𝘱𝘥𝘢𝘵𝘦𝘴 𝘸𝘪𝘭𝘭 𝘯𝘰𝘸 𝘣𝘦 𝘴𝘦𝘯𝘵 𝘵𝘰 𝘵𝘩𝘪𝘴 𝘵𝘰𝘱𝘪𝘤 (𝘐𝘋: ${topicId}).`);
 });
 
 // Send command (owner only)
@@ -216,12 +216,12 @@ bot.command('send', async (ctx) => {
   const authorizedUser = process.env.OWNER_ID;
 
   if (chatId !== authorizedUser) {
-    return ctx.reply('You are not authorized to send emergency messages.');
+    return ctx.reply('𝘙𝘦𝘴𝘦𝘳𝘷𝘦𝘥 𝘧𝘰𝘳 𝘰𝘸𝘯𝘦𝘳 𝘶𝘴𝘦 𝘰𝘯𝘭𝘺.');
   }
 
   const originalMessage = ctx.message.reply_to_message;
   if (!originalMessage) {
-    return ctx.reply('Please reply to the message you want to forward.');
+    return ctx.reply('𝘗𝘭𝘦𝘢𝘴𝘦 𝘳𝘦𝘱𝘭𝘺 𝘵𝘰 𝘵𝘩𝘦 𝘮𝘦𝘴𝘴𝘢𝘨𝘦 𝘺𝘰𝘶 𝘸𝘢𝘯𝘵 𝘵𝘰 𝘧𝘰𝘳𝘸𝘢𝘳𝘥.');
   }
 
   const subscribers = await chatCollection.find().toArray();
@@ -234,7 +234,7 @@ bot.command('send', async (ctx) => {
     }
   }
 
-  ctx.reply('Emergency message forwarded to all subscribers.');
+  ctx.reply('𝘔𝘦𝘴𝘴𝘢𝘨𝘦 𝘧𝘰𝘳𝘸𝘢𝘳𝘥𝘦𝘥 𝘴𝘶𝘤𝘤𝘦𝘴𝘴𝘧𝘶𝘭𝘭𝘺.');
 });
 
 // About command
@@ -301,7 +301,7 @@ const sendRssUpdates = async () => {
           await updateLastLog(chatId, rssUrl, latestItem.title, latestItem.link);
         }
       } catch (err) {
-        console.error(`Failed to process feed ${rssUrl}:`, err.message);
+        console.error(`𝘍𝘢𝘪𝘭𝘦𝘥 𝘵𝘰 𝘱𝘳𝘰𝘤𝘦𝘴𝘴 𝘧𝘦𝘦𝘥 ${rssUrl}:`, err.message);
       }
     }
   }
