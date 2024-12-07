@@ -104,6 +104,21 @@ const spamProtection = async (ctx, next) => {
   }
 };
 
+// Middleware isAdmin check
+async function isAdmin(ctx, next) {
+  try {
+    // Fetch chat member info for the user
+    const member = await ctx.telegram.getChatMember(ctx.chat.id, ctx.from.id);
+    if (['administrator', 'creator'].includes(member.status)) {
+      return next(); // Proceed to the next middleware/command
+    }
+    return ctx.reply('𝘠𝘰𝘶 𝘮𝘶𝘴𝘵 𝘣𝘦 𝘢𝘯 𝘢𝘥𝘮𝘪𝘯 𝘵𝘰 𝘶𝘴𝘦 𝘵𝘩𝘪𝘴 𝘤𝘰𝘮𝘮𝘢𝘯𝘥.');
+  } catch (err) {
+    console.error('Error checking admin status:', err);
+    return ctx.reply('𝘜𝘯𝘢𝘣𝘭𝘦 𝘵𝘰 𝘷𝘦𝘳𝘪𝘧𝘺 𝘢𝘥𝘮𝘪𝘯 𝘴𝘵𝘢𝘵𝘶𝘴.');
+  }
+}
+
 // Middleware for about cmd
 const getBotDetails = () => {
   const packageJsonPath = path.resolve('./package.json');
@@ -127,7 +142,7 @@ const getBotDetails = () => {
 };
 
 // Bot start command
-bot.start(spamProtection, (ctx) => {
+bot.start(spamProtection, isAdmin, (ctx) => {
   ctx.reply(
     '<i>RSS-ify brings you the latest updates from your favorite feeds right into Telegram, hassle-free!</i>\n\n' +
     '<b>Available Commands:</b>\n' +
@@ -141,7 +156,7 @@ bot.start(spamProtection, (ctx) => {
 });
 
 // Add command 
-bot.command('add', spamProtection, async (ctx) => {
+bot.command('add', spamProtection, isAdmin, async (ctx) => {
   const rssUrl = ctx.message.text.split(' ')[1];
   if (!rssUrl) {
     return ctx.reply('Usage: /𝘢𝘥𝘥 𝘳𝘴𝘴_𝘶𝘳𝘭', { parse_mode: 'HTML' });
@@ -171,7 +186,7 @@ bot.command('add', spamProtection, async (ctx) => {
 });
 
 // Delete command 
-bot.command('del', spamProtection, async (ctx) => {
+bot.command('del', spamProtection, isAdmin, async (ctx) => {
   const rssUrl = ctx.message.text.split(' ')[1];
   if (!rssUrl) {
     return ctx.reply('Usage: /𝘥𝘦𝘭 𝘳𝘴𝘴_𝘶𝘳𝘭', { parse_mode: 'HTML' });
@@ -185,7 +200,7 @@ bot.command('del', spamProtection, async (ctx) => {
 });
 
 // List command 
-bot.command('list', spamProtection, async (ctx) => {
+bot.command('list', spamProtection, isAdmin, async (ctx) => {
   const chatId = ctx.chat.id.toString();
   const chat = await chatCollection.findOne({ chatId });
 
@@ -198,7 +213,7 @@ bot.command('list', spamProtection, async (ctx) => {
 });
 
 // Set command 
-bot.command('set', spamProtection, async (ctx) => {
+bot.command('set', spamProtection, isAdmin, async (ctx) => {
   const chatId = ctx.chat.id.toString();
   const topicId = ctx.message.message_thread_id;
 
