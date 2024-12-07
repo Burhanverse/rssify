@@ -257,6 +257,38 @@ bot.command('send', async (ctx) => {
   ctx.reply('𝘔𝘦𝘴𝘴𝘢𝘨𝘦 𝘧𝘰𝘳𝘸𝘢𝘳𝘥𝘦𝘥 𝘴𝘶𝘤𝘤𝘦𝘴𝘴𝘧𝘶𝘭𝘭𝘺.');
 });
 
+// Ping command 
+bot.command('ping', spamProtection, isAdmin, async (ctx) => {
+  const start = Date.now();
+  try {
+    const sentMessage = await ctx.reply('𝘗𝘰𝘯𝘨! 𝘊𝘩𝘦𝘤𝘬𝘪𝘯𝘨 𝘱𝘪𝘯𝘨...');
+
+    // Wait for 2 seconds before editing the message
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    const end = Date.now();
+    const ping = end - start;
+    await ctx.telegram.editMessageText(
+      ctx.chat.id,
+      sentMessage.message_id,
+      null,
+      `𝘗𝘪𝘯𝘨: ${ping} ms`
+    );
+  } catch (err) {
+    // If error occurs,
+    try {
+      await ctx.telegram.editMessageText(
+        ctx.chat.id,
+        sentMessage.message_id,
+        null,
+        '𝘌𝘳𝘳𝘰𝘳 𝘸𝘩𝘪𝘭𝘦 𝘤𝘩𝘦𝘤𝘬𝘪𝘯𝘨 𝘱𝘪𝘯𝘨.'
+      );
+    } catch (editErr) {
+      console.error('Error editing ping message:', editErr);
+    }
+    console.error('Ping command error:', err);
+  }
+});
+
 // About command
 bot.command('about', spamProtection, async (ctx) => {
   const { version, description, author, license } = getBotDetails();
