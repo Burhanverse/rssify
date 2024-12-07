@@ -105,19 +105,24 @@ const spamProtection = async (ctx, next) => {
 };
 
 // Middleware isAdmin check
-async function isAdmin(ctx, next) {
-  try {
-    // Fetch chat member info for the user
-    const member = await ctx.telegram.getChatMember(ctx.chat.id, ctx.from.id);
-    if (['administrator', 'creator'].includes(member.status)) {
-      return next(); // Proceed to the next middleware/command
-    }
-    return ctx.reply('𝘠𝘰𝘶 𝘮𝘶𝘴𝘵 𝘣𝘦 𝘢𝘯 𝘢𝘥𝘮𝘪𝘯 𝘵𝘰 𝘶𝘴𝘦 𝘵𝘩𝘪𝘴 𝘤𝘰𝘮𝘮𝘢𝘯𝘥.');
-  } catch (err) {
-    console.error('Error checking admin status:', err);
-    return ctx.reply('𝘜𝘯𝘢𝘣𝘭𝘦 𝘵𝘰 𝘷𝘦𝘳𝘪𝘧𝘺 𝘢𝘥𝘮𝘪𝘯 𝘴𝘵𝘢𝘵𝘶𝘴.');
+const isAdmin = async (ctx, next) => {
+  // If the chat is private, allow the command to proceed
+  if (ctx.chat.type === 'private') {
+    return next();
   }
-}
+
+  try {
+    const chatMember = await ctx.telegram.getChatMember(ctx.chat.id, ctx.from.id);
+    if (['administrator', 'creator'].includes(chatMember.status)) {
+      return next(); // User is an admin
+    } else {
+      return ctx.reply('𝘠𝘰𝘶 𝘮𝘶𝘴𝘵 𝘣𝘦 𝘢𝘯 𝘢𝘥𝘮𝘪𝘯 𝘵𝘰 𝘶𝘴𝘦 𝘵𝘩𝘪𝘴 𝘤𝘰𝘮𝘮𝘢𝘯𝘥.');
+    }
+  } catch (err) {
+    console.error('Error in isAdmin middleware:', err);
+    return ctx.reply('𝘜𝘯𝘢𝘣𝘭𝘦 𝘵𝘰 𝘷𝘦𝘳𝘪𝘧𝘺 𝘺𝘰𝘶𝘳 𝘢𝘤𝘤𝘦𝘴𝘴 𝘳𝘪𝘨𝘩𝘵𝘴. 𝘗𝘭𝘦𝘢𝘴𝘦 𝘵𝘳𝘺 𝘢𝘨𝘢𝘪𝘯.');
+  }
+};
 
 // Middleware for about cmd
 const getBotDetails = () => {
