@@ -131,9 +131,10 @@ const getBotDetails = () => {
     const packageData = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
     return {
       version: packageData.version,
-      description: packageData.description || 'RSS-ify Telegram Bot',
-      author: packageData.author || 'Unknown',
-      license: packageData.license || 'N/A',
+      description: packageData.description,
+      author: packageData.author,
+      homepage: packageData.homepage,
+      license: packageData.license,
     };
   } catch (err) {
     console.error('Failed to read package.json:', err.message);
@@ -289,14 +290,18 @@ bot.command('ping', spamProtection, isAdmin, async (ctx) => {
 
 // About command
 bot.command('about', spamProtection, async (ctx) => {
-  const { version, description, author, license } = getBotDetails();
+  const { version, description, author, homepage, license } = getBotDetails();
   const message =
-    '<b>RSS-ify Version:</b> <i>' + escapeHTML(version) + '</i>\n\n' +
-    '<b>Description:</b> <i>' + escapeHTML(description) + '</i>\n' +
-    '<b>Author:</b> <i>' + escapeHTML(author) + '</i>\n' +
-    '<b>License:</b> <i>' + escapeHTML(license) + '</i>';
+    `<b>RSS-ify Version:</b> <i>${escapeHTML(version)}</i>\n\n` +
+    `<b>Description:</b> <i>${escapeHTML(description)}</i>\n` +
+    `<b>Project Page:</b> <i><a href="${escapeHTML(homepage)}">Link</a></i>\n` +
+    `<b>Author:</b> <i>${escapeHTML(author)}</i>\n` +
+    `<b>License:</b> <i>${escapeHTML(license)}</i>`;
 
-  ctx.reply(message, { parse_mode: 'HTML' });
+  await ctx.reply(message, {
+    parse_mode: 'HTML',
+    disable_web_page_preview: true,
+  });
 });
 
 // Fetch RSS
