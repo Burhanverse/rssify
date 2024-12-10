@@ -33,13 +33,14 @@ async function initDatabase() {
 }
 
 const escapeHTML = (text) => {
-  return text.replace(/[&<>"']/g, (char) => {
+  return text.replace(/[&<>"'’]/g, (char) => {
     switch (char) {
       case '&': return '&amp;';
       case '<': return '&lt;';
       case '>': return '&gt;';
       case '"': return '&quot;';
       case "'": return '&#39;';
+      case '’': return '&#8217;';
       default: return char;
     }
   });
