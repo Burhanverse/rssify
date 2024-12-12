@@ -47,14 +47,15 @@ const escapeHTML = (text) => {
 };
 
 const getLastLog = async (chatId, rssUrl) => {
-  const log = await logCollection.findOne({ chatId, rssUrl });
-  return log ? { title: log.lastItemTitle, link: log.lastItemLink } : null;
+  return await logCollection.findOne({ chatId, rssUrl });
 };
 
+// Update the log for a specific RSS feed in a chat
 const updateLastLog = async (chatId, rssUrl, lastItemTitle, lastItemLink) => {
+  const timestamp = new Date();
   await logCollection.updateOne(
     { chatId, rssUrl },
-    { $set: { lastItemTitle, lastItemLink } },
+    { $set: { lastItemTitle, lastItemLink, timestamp } },
     { upsert: true }
   );
 };
@@ -305,7 +306,7 @@ bot.command('about', spamProtection, async (ctx) => {
   });
 });
 
-// Fetch RSS
+// Fetch RSS feeds and parse them
 const fetchRss = async (rssUrl) => {
   const items = [];
   const feedparser = new FeedParser();
@@ -324,7 +325,7 @@ const fetchRss = async (rssUrl) => {
   });
 };
 
-// Send RSS updates
+// Send RSS updates to Telegram
 const sendRssUpdates = async () => {
   const chats = await chatCollection.find({ rssFeeds: { $exists: true, $not: { $size: 0 } } }).toArray();
   for (const { chatId, topicId, rssFeeds } of chats) {
@@ -336,47 +337,51 @@ const sendRssUpdates = async () => {
         const latestItem = items[0];
         const lastLog = await getLastLog(chatId, rssUrl);
 
-        if (!lastLog || latestItem.title !== lastLog.title || latestItem.link !== lastLog.link) {
-          const message = `<b>${escapeHTML(latestItem.title)}</b>\n\n` +
-            `<a href="${escapeHTML(latestItem.link)}">𝘚𝘰𝘶𝘳𝘤𝘦</a>`;
-
-          await bot.telegram.sendMessage(chatId, message, {
-            parse_mode: 'HTML',
-            ...(topicId && { message_thread_id: parseInt(topicId) }),
-          }).catch(async (error) => {
-            if (error.on?.payload?.chat_id) {
-              console.error(`Failed to send message to chat ID: ${error.on.payload.chat_id}`);
-              // Remove the chatId from the database
-              await chatCollection.deleteOne({ chatId });
-              console.log('Deleted chat from database:', error.on.payload.chat_id);
-            } else {
-              console.error('Unexpected error:', error.message);
-            }
-          });
-
-          await updateLastLog(chatId, rssUrl, latestItem.title, latestItem.link);
+        // Avoid duplicate posts by checking title and URL
+        if (lastLog && latestItem.link === lastLog.lastItemLink) {
+          console.log(`No new updates for chat ${chatId} on feed ${rssUrl}`);
+          continue;
         }
+
+        const message = `<b>${escapeHTML(latestItem.title)}</b>\n\n` +
+          `<a href="${escapeHTML(latestItem.link)}">Source</a>`;
+
+        await bot.telegram.sendMessage(chatId, message, {
+          parse_mode: 'HTML',
+          ...(topicId && { message_thread_id: parseInt(topicId) }),
+        }).catch(async (error) => {
+          if (error.on?.payload?.chat_id) {
+            console.error(`Failed to send message to chat ID: ${error.on.payload.chat_id}`);
+            await chatCollection.deleteOne({ chatId });
+            console.log('Deleted chat from database:', error.on.payload.chat_id);
+          } else {
+            console.error('Unexpected error:', error.message);
+          }
+        });
+
+        // Update logs after successful posting
+        await updateLastLog(chatId, rssUrl, latestItem.title, latestItem.link);
       } catch (err) {
-        console.error(`𝘍𝘢𝘪𝘭𝘦𝘥 𝘵𝘰 𝘱𝘳𝘰𝘤𝘦𝘴𝘴 𝘧𝘦𝘦𝘥 ${rssUrl}:`, err.message);
+        console.error(`Failed to process feed ${rssUrl}:`, err.message);
       }
     }
   }
 };
 
+// Run the bot periodically
 let isProcessing = false;
 
 setInterval(async () => {
   if (isProcessing) return;
   isProcessing = true;
   try {
-    await sendRssUpdates(bot);
+    await sendRssUpdates();
   } catch (err) {
     console.error('Error in sendRssUpdates:', err);
   } finally {
     isProcessing = false;
   }
 }, 80 * 1000); // 80 seconds
-
 
 // Initialize and Start the bot
 (async () => {
