@@ -159,7 +159,9 @@ bot.start(spamProtection, isAdmin, (ctx) => {
     '/set - <i>Set topic for RSS updates (group only)</i>\n' +
     '/about - <i>About RSS-ify version, description, etc...</i>\n\n' +
     '<a href="https://t.me/burhanverse"><i>Prjkt:Sid.</i></a>',
-    { parse_mode: 'HTML' }
+    { parse_mode: 'HTML',
+      disable_web_page_preview: true,
+    }
   );
 });
 
@@ -217,7 +219,10 @@ bot.command('list', spamProtection, isAdmin, async (ctx) => {
   }
 
   const feeds = chat.rssFeeds.map((url, i) => `${i + 1}. <a href="${escapeHTML(url)}">${escapeHTML(url)}</a>`).join('\n');
-  ctx.reply(`𝘠𝘰𝘶𝘳 𝘴𝘶𝘣𝘴𝘤𝘳𝘪𝘣𝘦𝘥 𝘧𝘦𝘦𝘥𝘴:\n\n${feeds}\n\n<a href="https://t.me/burhanverse"><i>Prjkt:Sid.</i></a>`, { parse_mode: 'HTML' });
+  ctx.reply(`𝘠𝘰𝘶𝘳 𝘴𝘶𝘣𝘴𝘤𝘳𝘪𝘣𝘦𝘥 𝘧𝘦𝘦𝘥𝘴:\n\n${feeds}\n\n<a href="https://t.me/burhanverse"><i>Prjkt:Sid.</i></a>`, { 
+    parse_mode: 'HTML',
+    disable_web_page_preview: true,
+  });
 });
 
 // Set command 
