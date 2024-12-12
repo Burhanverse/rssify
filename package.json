@@ -9,7 +9,7 @@
     "telegraf": "^4.16.3"
   },
   "name": "rssify",
-  "version": "3.3.1-4e96820",
+  "version": "3.3.1-c436086",
   "description": "RSS-ify brings you the latest updates from your favorite feeds right into Telegram, hassle-free!",
   "main": "bot.mjs",
   "scripts": {
@@ -20,7 +20,7 @@
     "url": "git+https://github.com/Burhanverse/rssify.git"
   },
   "author": "@Burhanverse",
-  "license": "𝘗𝘳𝘫𝘬𝘵:𝘚𝘪𝘥. - Proprietary License",
+  "license": "Prjkt:Sid. - Proprietary License",
   "bugs": {
     "url": "https://github.com/Burhanverse/rssify/issues"
   },
