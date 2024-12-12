@@ -46,11 +46,11 @@ const escapeHTML = (text) => {
   });
 };
 
+// Last log functions
 const getLastLog = async (chatId, rssUrl) => {
   return await logCollection.findOne({ chatId, rssUrl });
 };
 
-// Update the log for a specific RSS feed in a chat
 const updateLastLog = async (chatId, rssUrl, lastItemTitle, lastItemLink) => {
   const timestamp = new Date();
   await logCollection.updateOne(
@@ -73,7 +73,6 @@ const spamProtection = async (ctx, next) => {
       return ctx.reply('You are blocked for spamming. Wait until the cooldown expires.');
     }
 
-    // Update usage and check for spam
     const recentCommands = (user?.commands || []).filter(cmd =>
       cmd.command === command && new Date(cmd.timestamp) > now - 60 * 1000
     );
@@ -93,7 +92,7 @@ const spamProtection = async (ctx, next) => {
       }
     }
 
-    // Allow the user to proceed
+    // Allow to proceed
     await spamCollection.updateOne(
       { userId },
       { $push: { commands: { command, timestamp: now } }, $setOnInsert: { warnings: 0 } },
@@ -144,7 +143,7 @@ const getBotDetails = () => {
       version: 'Unknown',
       description: 'RSS-ify brings you the latest updates from your favorite feeds right into Telegram, hassle-free!',
       author: 'Burhanverse',
-      license: 'BSPL - Proprietary License',
+      license: '𝘗𝘳𝘫𝘬𝘵:𝘚𝘪𝘥. - Proprietary License',
     };
   }
 };
@@ -176,7 +175,7 @@ bot.command('add', spamProtection, isAdmin, async (ctx) => {
     if (items.length === 0) throw new Error('Empty feed.');
 
     await chatCollection.updateOne({ chatId }, { $addToSet: { rssFeeds: rssUrl } }, { upsert: true });
-    ctx.reply(`𝘙𝘚𝘚 𝘧𝘦𝘦𝘥 𝘢𝘥𝘥𝘦𝘥: <a href="${escapeHTML(rssUrl)}">${escapeHTML(rssUrl)}</a>`, { parse_mode: 'HTML' });
+    ctx.reply(`𝘍𝘦𝘦𝘥 𝘢𝘥𝘥𝘦𝘥: <a href="${escapeHTML(rssUrl)}">${escapeHTML(rssUrl)}</a>`, { parse_mode: 'HTML' });
 
     const latestItem = items[0];
     await updateLastLog(chatId, rssUrl, latestItem.title, latestItem.link);
@@ -189,7 +188,7 @@ bot.command('add', spamProtection, isAdmin, async (ctx) => {
     });
 
   } catch (err) {
-    ctx.reply(`𝘍𝘢𝘪𝘭𝘦𝘥 𝘵𝘰 𝘢𝘥𝘥 𝘙𝘚𝘚 𝘧𝘦𝘦𝘥: ${escapeHTML(err.message)}`, { parse_mode: 'HTML' });
+    ctx.reply(`𝘍𝘢𝘪𝘭𝘦𝘥 𝘵𝘰 𝘢𝘥𝘥 𝘧𝘦𝘦𝘥: ${escapeHTML(err.message)}`, { parse_mode: 'HTML' });
   }
 });
 
@@ -204,7 +203,7 @@ bot.command('del', spamProtection, isAdmin, async (ctx) => {
   await chatCollection.updateOne({ chatId }, { $pull: { rssFeeds: rssUrl } });
   await logCollection.deleteOne({ chatId, rssUrl });
 
-  ctx.reply(`𝘙𝘚𝘚 𝘧𝘦𝘦𝘥 𝘳𝘦𝘮𝘰𝘷𝘦𝘥: <a href="${escapeHTML(rssUrl)}">${escapeHTML(rssUrl)}</a>`, { parse_mode: 'HTML' });
+  ctx.reply(`𝘍𝘦𝘦𝘥 𝘳𝘦𝘮𝘰𝘷𝘦𝘥: <a href="${escapeHTML(rssUrl)}">${escapeHTML(rssUrl)}</a>`, { parse_mode: 'HTML' });
 });
 
 // List command 
@@ -213,7 +212,7 @@ bot.command('list', spamProtection, isAdmin, async (ctx) => {
   const chat = await chatCollection.findOne({ chatId });
 
   if (!chat?.rssFeeds?.length) {
-    return ctx.reply('𝘕𝘰 𝘙𝘚𝘚 𝘧𝘦𝘦𝘥𝘴 𝘢𝘥𝘥𝘦𝘥.', { parse_mode: 'Markdown' });
+    return ctx.reply('𝘕𝘰 𝘍𝘦𝘦𝘥𝘴 𝘢𝘥𝘥𝘦𝘥.', { parse_mode: 'Markdown' });
   }
 
   const feeds = chat.rssFeeds.map((url, i) => `${i + 1}. <a href="${escapeHTML(url)}">${escapeHTML(url)}</a>`).join('\n');
@@ -344,7 +343,7 @@ const sendRssUpdates = async () => {
         }
 
         const message = `<b>${escapeHTML(latestItem.title)}</b>\n\n` +
-          `<a href="${escapeHTML(latestItem.link)}">Source</a>`;
+          `<a href="${escapeHTML(latestItem.link)}">𝘚𝘰𝘶𝘳𝘤𝘦</a>`;
 
         await bot.telegram.sendMessage(chatId, message, {
           parse_mode: 'HTML',
@@ -368,7 +367,6 @@ const sendRssUpdates = async () => {
   }
 };
 
-// Run the bot periodically
 let isProcessing = false;
 
 setInterval(async () => {
@@ -383,7 +381,7 @@ setInterval(async () => {
   }
 }, 80 * 1000); // 80 seconds
 
-// Initialize and Start the bot
+// Start the bot
 (async () => {
   await initDatabase();
   bot.launch().then(() => {
