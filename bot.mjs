@@ -379,13 +379,13 @@ setInterval(async () => {
   if (isProcessing) return;
   isProcessing = true;
   try {
-    await sendRssUpdates();
+    await sendRssUpdates(bot);
   } catch (err) {
     console.error('Error in sendRssUpdates:', err);
   } finally {
     isProcessing = false;
   }
-}, 80 * 1000); // 80 seconds
+}, 180 * 1000); // 180 seconds
 
 // Start the bot
 (async () => {
