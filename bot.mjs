@@ -158,7 +158,7 @@ bot.start(spamProtection, isAdmin, (ctx) => {
     '/list - <i>List of your subscribed feeds</i>\n' +
     '/set - <i>Set topic for RSS updates (group only)</i>\n' +
     '/about - <i>About RSS-ify version, description, etc...</i>\n\n' +
-    '<a href="https://t.me/burhanverse"><i>Prjkt:Sid.</i></a>',
+    '<a href="@burhanverse"><i>Prjkt:Sid.</i></a>',
     { parse_mode: 'HTML',
       disable_web_page_preview: true,
     }
@@ -184,7 +184,7 @@ bot.command('add', spamProtection, isAdmin, async (ctx) => {
     await updateLastLog(chatId, rssUrl, latestItem.title, latestItem.link);
 
     const message = `<b>${escapeHTML(latestItem.title)}</b>\n\n` +
-      `<a href="${escapeHTML(latestItem.link)}">𝘚𝘰𝘶𝘳𝘤𝘦</a> | <a href="https://t.me/burhanverse"><i>Prjkt:Sid.</i></a>`;
+      `<a href="${escapeHTML(latestItem.link)}">𝘚𝘰𝘶𝘳𝘤𝘦</a> | <a href="@burhanverse"><i>Prjkt:Sid.</i></a>`;
     await bot.telegram.sendMessage(chatId, message, {
       parse_mode: 'HTML',
       ...(ctx.message.message_thread_id && { message_thread_id: parseInt(ctx.message.message_thread_id) }),
@@ -219,7 +219,7 @@ bot.command('list', spamProtection, isAdmin, async (ctx) => {
   }
 
   const feeds = chat.rssFeeds.map((url, i) => `${i + 1}. <a href="${escapeHTML(url)}">${escapeHTML(url)}</a>`).join('\n');
-  ctx.reply(`𝘠𝘰𝘶𝘳 𝘴𝘶𝘣𝘴𝘤𝘳𝘪𝘣𝘦𝘥 𝘧𝘦𝘦𝘥𝘴:\n\n${feeds}\n\n<a href="https://t.me/burhanverse"><i>Prjkt:Sid.</i></a>`, { 
+  ctx.reply(`𝘠𝘰𝘶𝘳 𝘴𝘶𝘣𝘴𝘤𝘳𝘪𝘣𝘦𝘥 𝘧𝘦𝘦𝘥𝘴:\n\n${feeds}\n\n<a href="@burhanverse"><i>Prjkt:Sid.</i></a>`, { 
     parse_mode: 'HTML',
     disable_web_page_preview: true,
   });
@@ -272,8 +272,8 @@ bot.command('ping', spamProtection, isAdmin, async (ctx) => {
     const sentMessage = await ctx.reply('𝘗𝘰𝘯𝘨! 𝘊𝘩𝘦𝘤𝘬𝘪𝘯𝘨 𝘱𝘪𝘯𝘨...');
     // Calculate the ping
     const ping = Date.now() - start;
-    // Wait for 2 seconds before editing the message
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    // Wait for 1sec before editing the message
+    await new Promise((resolve) => setTimeout(resolve, 1000));
     await ctx.telegram.editMessageText(
       ctx.chat.id,
       sentMessage.message_id,
@@ -349,7 +349,7 @@ const sendRssUpdates = async () => {
         }
 
         const message = `<b>${escapeHTML(latestItem.title)}</b>\n\n` +
-          `<a href="${escapeHTML(latestItem.link)}">𝘚𝘰𝘶𝘳𝘤𝘦</a> | <a href="https://t.me/burhanverse"><i>Prjkt:Sid.</i></a>`;
+          `<a href="${escapeHTML(latestItem.link)}">𝘚𝘰𝘶𝘳𝘤𝘦</a> | <a href="@burhanverse"><i>Prjkt:Sid.</i></a>`;
 
         await bot.telegram.sendMessage(chatId, message, {
           parse_mode: 'HTML',
