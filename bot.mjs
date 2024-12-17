@@ -151,14 +151,15 @@ const getBotDetails = () => {
 // Bot start command
 bot.start(spamProtection, isAdmin, (ctx) => {
   ctx.reply(
-    '<i>RSS-ify brings you the latest updates from your favorite feeds right into Telegram, hassle-free!</i>\n\n' +
-    '<b>Available Commands:</b>\n' +
+    '🤖 <i>RSS-ify brings you the latest updates from your favorite feeds right into Telegram, hassle-free!</i>\n\n' +
+    '<b>⚙️ Supported feed types:</b> <i>Atom, RSS2.0 & RSS1.0</i>\n\n' +
+    '<b>⌨️ Available Commands:</b>\n' +
     '/add FeedURL - <i>Add a feed</i>\n' +
     '/del FeedURL - <i>Delete a feed</i>\n' +
     '/list - <i>List of your subscribed feeds</i>\n' +
     '/set - <i>Set topic for RSS updates (group only)</i>\n' +
     '/about - <i>About RSS-ify version, description, etc...</i>\n\n' +
-    '<a href="burhanverse.t.me"><i>Prjkt:Sid.</i></a>',
+    '©️<a href="burhanverse.t.me"><i>Prjkt:Sid.</i></a>',
     { parse_mode: 'HTML',
       disable_web_page_preview: true,
     }
