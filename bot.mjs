@@ -375,21 +375,25 @@ const sendRssUpdates = async () => {
 
 let isProcessing = false;
 
-setInterval(async () => {
-  if (isProcessing) return;
-  isProcessing = true;
+async function startCycle() {
+  if (isProcessing) return;  // Prevent starting a new cycle if the current one is still running
+  isProcessing = true;  // Mark as processing
   try {
     await sendRssUpdates(bot);
   } catch (err) {
     console.error('Error in sendRssUpdates:', err);
   } finally {
-    isProcessing = false;
+    isProcessing = false;  // Mark as not processing once done
   }
-}, 180 * 1000); // 180 seconds
 
-// Start the bot
+  // Trigger next cycle after 60secs
+  setTimeout(startCycle, 60 * 1000);  
+}
+
+// Initialize the bot
 (async () => {
   await initDatabase();
+  startCycle();  // Start the cycle immediately
   bot.launch().then(() => {
     console.log('Bot is running...');
   });
