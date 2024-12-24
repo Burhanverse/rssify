@@ -175,24 +175,36 @@ bot.command('add', spamProtection, isAdmin, async (ctx) => {
 
   const chatId = ctx.chat.id.toString();
   try {
+    // Check if the feed already exists
+    const chat = await chatCollection.findOne({ chatId });
+    if (chat?.rssFeeds?.includes(rssUrl)) {
+      return ctx.reply(`𝘍𝘦𝘦𝘥 𝘢𝘭𝘳𝘦𝘢𝘥𝘺 𝘦𝘹𝘪𝘴𝘵𝘴`, { 
+        parse_mode: 'HTML',
+      });
+    }
+
+    // Fetch and validate the RSS feed
     const items = await fetchRss(rssUrl);
-    if (items.length === 0) throw new Error('Empty feed.');
+    if (items.length === 0) throw new Error('𝘌𝘮𝘱𝘵𝘺 𝘧𝘦𝘦𝘥.');
 
+    // Add the feed to the database
     await chatCollection.updateOne({ chatId }, { $addToSet: { rssFeeds: rssUrl } }, { upsert: true });
-    ctx.reply(`𝘍𝘦𝘦𝘥 𝘢𝘥𝘥𝘦𝘥: <a href="${escapeHTML(rssUrl)}">${escapeHTML(rssUrl)}</a>`, { parse_mode: 'HTML' });
+    ctx.reply(`𝘍𝘦𝘦𝘥 𝘢𝘥𝘥𝘦𝘥: ${escapeHTML(rssUrl)}`, { parse_mode: 'HTML' });
 
+    // Update the last log with the latest feed item
     const latestItem = items[0];
     await updateLastLog(chatId, rssUrl, latestItem.title, latestItem.link);
 
+    // Send the latest feed item as a message
     const message = `<b>${escapeHTML(latestItem.title)}</b>\n\n` +
-      `<a href="${escapeHTML(latestItem.link)}">𝘚𝘰𝘶𝘳𝘤𝘦</a> | <a href="burhanverse.t.me"><i>Prjkt:Sid.</i></a>`;
+      `<a href="${escapeHTML(latestItem.link)}">Source</a> | <a href="burhanverse.t.me"><i>Prjkt:Sid.</i></a>`;
     await bot.telegram.sendMessage(chatId, message, {
       parse_mode: 'HTML',
       ...(ctx.message.message_thread_id && { message_thread_id: parseInt(ctx.message.message_thread_id) }),
     });
 
   } catch (err) {
-    ctx.reply(`𝘍𝘢𝘪𝘭𝘦𝘥 𝘵𝘰 𝘢𝘥𝘥 𝘧𝘦𝘦𝘥: ${escapeHTML(err.message)}`, { parse_mode: 'HTML' });
+    ctx.reply(`Failed to add feed: ${escapeHTML(err.message)}`, { parse_mode: 'HTML' });
   }
 });
 
