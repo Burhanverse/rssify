@@ -9,11 +9,14 @@
     "telegraf": "^4.16.3"
   },
   "name": "rssify",
-  "version": "3.3.7-740454c",
+  "version": "3.4.1",
   "description": "RSS-ify brings you the latest updates from your favorite feeds right into Telegram, hassle-free!",
   "main": "bot.mjs",
   "scripts": {
-    "start": "npm install && node bot.mjs"
+    "start": "npm install concurrently && npm run launch",
+    "launch": "concurrently \"npm:api\" \"npm:bot\"",
+    "api": "pip install -r api/feedparser/requirements.txt && python3 api/feedparser/api.py",
+    "bot": "npm install && node bot.mjs"
   },
   "repository": {
     "type": "git",

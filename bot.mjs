@@ -160,7 +160,8 @@ bot.start(spamProtection, isAdmin, (ctx) => {
     '/set - <i>Set topic for RSS updates (group only)</i>\n' +
     '/about - <i>About RSS-ify version, description, etc...</i>\n\n' +
     '©️<a href="burhanverse.t.me"><i>Prjkt:Sid.</i></a>',
-    { parse_mode: 'HTML',
+    {
+      parse_mode: 'HTML',
       disable_web_page_preview: true,
     }
   );
@@ -178,7 +179,7 @@ bot.command('add', spamProtection, isAdmin, async (ctx) => {
     // Check if the feed already exists
     const chat = await chatCollection.findOne({ chatId });
     if (chat?.rssFeeds?.includes(rssUrl)) {
-      return ctx.reply(`𝘍𝘦𝘦𝘥 𝘢𝘭𝘳𝘦𝘢𝘥𝘺 𝘦𝘹𝘪𝘴𝘵𝘴`, { 
+      return ctx.reply(`𝘍𝘦𝘦𝘥 𝘢𝘭𝘳𝘦𝘢𝘥𝘺 𝘦𝘹𝘪𝘴𝘵𝘴`, {
         parse_mode: 'HTML',
       });
     }
@@ -232,7 +233,7 @@ bot.command('list', spamProtection, isAdmin, async (ctx) => {
   }
 
   const feeds = chat.rssFeeds.map((url, i) => `${i + 1}. <a href="${escapeHTML(url)}">${escapeHTML(url)}</a>`).join('\n');
-  ctx.reply(`𝘠𝘰𝘶𝘳 𝘴𝘶𝘣𝘴𝘤𝘳𝘪𝘣𝘦𝘥 𝘧𝘦𝘦𝘥𝘴:\n\n${feeds}\n\n<a href="burhanverse.t.me"><i>Prjkt:Sid.</i></a>`, { 
+  ctx.reply(`𝘠𝘰𝘶𝘳 𝘴𝘶𝘣𝘴𝘤𝘳𝘪𝘣𝘦𝘥 𝘧𝘦𝘦𝘥𝘴:\n\n${feeds}\n\n<a href="burhanverse.t.me"><i>Prjkt:Sid.</i></a>`, {
     parse_mode: 'HTML',
     disable_web_page_preview: true,
   });
@@ -324,24 +325,20 @@ bot.command('about', spamProtection, async (ctx) => {
   });
 });
 
-// Fetch RSS feeds and parse them
+// Fetch RSS feeds from api
 const fetchRss = async (rssUrl) => {
-  const items = [];
-  const feedparser = new FeedParser();
+  const axios = require('axios');
 
-  return new Promise((resolve, reject) => {
-    axios.get(rssUrl, { responseType: 'stream' })
-      .then((res) => res.data.pipe(feedparser))
-      .catch(() => reject(new Error('Invalid URL')));
-
-    feedparser.on('error', () => reject(new Error('Invalid feed format.')));
-    feedparser.on('readable', function () {
-      let item;
-      while ((item = this.read())) items.push(item);
+  try {
+    const response = await axios.get('http://127.0.0.1:5000/parse', {
+      params: { url: rssUrl },
     });
-    feedparser.on('end', () => resolve(items));
-  });
+    return response.data.items;
+  } catch (error) {
+    throw new Error(error.response?.data?.error || 'Failed to fetch RSS feed');
+  }
 };
+
 
 // Send RSS updates to Telegram
 const sendRssUpdates = async () => {
@@ -400,7 +397,7 @@ async function startCycle() {
   }
 
   // Trigger next cycle after 60secs
-  setTimeout(startCycle, 60 * 1000);  
+  setTimeout(startCycle, 60 * 1000);
 }
 
 // Initialize the bot
