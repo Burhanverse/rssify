@@ -327,8 +327,6 @@ bot.command('about', spamProtection, async (ctx) => {
 
 // Fetch RSS feeds from api
 const fetchRss = async (rssUrl) => {
-  const axios = require('axios');
-
   try {
     const response = await axios.get('http://127.0.0.1:5000/parse', {
       params: { url: rssUrl },
