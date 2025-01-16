@@ -17,7 +17,8 @@
     "start": "npm install concurrently && npm run launch",
     "launch": "concurrently \"npm:api\" \"npm:bot\"",
     "api": "pip install -r api/feedparser/requirements.txt && python3 api/feedparser/api.py",
-    "bot": "npm install && node bot.mjs"
+    "bot": "npm install && node bot.mjs",
+    "prod": "python3 api/feedparser/api.py && node bot.mjs"
   },
   "repository": {
     "type": "git",
