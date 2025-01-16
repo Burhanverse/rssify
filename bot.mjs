@@ -15,9 +15,10 @@ const DATABASE_NAME = process.env.DB_NAME || 'rssify';
 const bot = new Telegraf(BOT_TOKEN);
 const client = new MongoClient(MONGO_URI);
 
+// MongoDB connection and collections
 let db, chatCollection, logCollection, spamCollection;
 
-async function initDatabase() {
+const initDatabase = async () => {
   try {
     await client.connect();
     db = client.db(DATABASE_NAME);
@@ -29,20 +30,31 @@ async function initDatabase() {
     console.error('Failed to connect to MongoDB:', err.message);
     process.exit(1);
   }
-}
+};
 
-const escapeHTML = (text) => {
-  return text.replace(/[&<>"'’]/g, (char) => {
-    switch (char) {
-      case '&': return '&amp;';
-      case '<': return '&lt;';
-      case '>': return '&gt;';
-      case '"': return '&quot;';
-      case "'": return '&#39;';
-      case '’': return '&#8217;';
-      default: return char;
+// Middleware to check if the user exists in the database
+const isUserInDb = async (ctx, next) => {
+  try {
+
+    if (!db) {
+      await initDatabase();
     }
-  });
+
+    const chatId = ctx.chat.id;
+    console.log(`Checking if user with chat ID ${chatId} exists in the database...`);
+
+    const userExists = await chatCollection.findOne({ chatId: chatId.toString() });
+    if (!userExists) {
+      console.log(`User with chat ID ${chatId} is NOT found in the database.`);
+      return ctx.reply('You are not registered in the database. Please contact the admin or use the /start command.');
+    }
+
+    console.log(`User with chat ID ${chatId} is found in the database.`);
+    return next();
+  } catch (error) {
+    console.error('Error in isUserInDb middleware:', error);
+    return ctx.reply('An error occurred while checking your user status. Please try again later.');
+  }
 };
 
 // Last log functions
@@ -59,27 +71,19 @@ const updateLastLog = async (chatId, rssUrl, lastItemTitle, lastItemLink) => {
   );
 };
 
-// Middleware to check if the user exists in the database
-const isUserInDb = async (ctx, next) => {
-  try {
-    const chatId = ctx.chat.id;
-
-    const db = client.db("rssify");
-    const usersCollection = db.collection("chats");
-
-    // Check if the user exists in the database
-    const userExists = await usersCollection.findOne({ chat_id: chatId });
-
-    if (!userExists) {
-      console.log(`User with chat ID ${chatId} is not in the database.`);
-      return ctx.reply('You are not registered in the database. Please contact the admin or use the /start command.');
+// Escape HTML helper function
+const escapeHTML = (text) => {
+  return text.replace(/[&<>"'’]/g, (char) => {
+    switch (char) {
+      case '&': return '&amp;';
+      case '<': return '&lt;';
+      case '>': return '&gt;';
+      case '"': return '&quot;';
+      case "'": return '&#39;';
+      case '’': return '&#8217;';
+      default: return char;
     }
-
-    return next();
-  } catch (error) {
-    console.error('Error in isUserInDb middleware:', error);
-    return ctx.reply('An error occurred while checking your user status. Please try again later.');
-  }
+  });
 };
 
 // Spam protection middleware
