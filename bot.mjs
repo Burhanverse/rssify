@@ -2,7 +2,6 @@ import fs from 'fs';
 import path from 'path';
 import axios from 'axios';
 import { Telegraf } from 'telegraf';
-import FeedParser from 'feedparser';
 import { MongoClient } from 'mongodb';
 import dotenv from 'dotenv';
 
@@ -66,7 +65,7 @@ const isUserInDb = async (ctx, next) => {
     const chatId = ctx.chat.id;
 
     const db = client.db("rssify");
-    const usersCollection = db.collection("users");
+    const usersCollection = db.collection("chats");
 
     // Check if the user exists in the database
     const userExists = await usersCollection.findOne({ chat_id: chatId });
