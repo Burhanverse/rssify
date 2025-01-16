@@ -1,6 +1,7 @@
 node_modules
 .codebuddy
-.idea
 config.json
 .env
 *.bak
+test.env
+*.md

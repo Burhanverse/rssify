@@ -60,6 +60,29 @@ const updateLastLog = async (chatId, rssUrl, lastItemTitle, lastItemLink) => {
   );
 };
 
+// Middleware to check if the user exists in the database
+const isUserInDb = async (ctx, next) => {
+  try {
+    const chatId = ctx.chat.id;
+
+    const db = client.db("rssify");
+    const usersCollection = db.collection("users");
+
+    // Check if the user exists in the database
+    const userExists = await usersCollection.findOne({ chat_id: chatId });
+
+    if (!userExists) {
+      console.log(`User with chat ID ${chatId} is not in the database.`);
+      return ctx.reply('You are not registered in the database. Please contact the admin or use the /start command.');
+    }
+
+    return next();
+  } catch (error) {
+    console.error('Error in isUserInDb middleware:', error);
+    return ctx.reply('An error occurred while checking your user status. Please try again later.');
+  }
+};
+
 // Spam protection middleware
 const spamProtection = async (ctx, next) => {
   try {
@@ -149,7 +172,7 @@ const getBotDetails = () => {
 };
 
 // Bot start command
-bot.start(spamProtection, isAdmin, (ctx) => {
+bot.start(spamProtection, isUserInDb, isAdmin, (ctx) => {
   ctx.reply(
     '🤖 <i>RSS-ify brings you the latest updates from your favorite feeds right into Telegram, hassle-free!</i>\n\n' +
     '<b>⚙️ Supported feed types:</b> <i>Atom, RSS2.0 & RSS1.0</i>\n\n' +
@@ -168,7 +191,7 @@ bot.start(spamProtection, isAdmin, (ctx) => {
 });
 
 // Add command 
-bot.command('add', spamProtection, isAdmin, async (ctx) => {
+bot.command('add', spamProtection, isUserInDb, isAdmin, async (ctx) => {
   const rssUrl = ctx.message.text.split(' ')[1];
   if (!rssUrl) {
     return ctx.reply('Usage: /𝘢𝘥𝘥 𝘳𝘴𝘴_𝘶𝘳𝘭', { parse_mode: 'HTML' });
@@ -210,7 +233,7 @@ bot.command('add', spamProtection, isAdmin, async (ctx) => {
 });
 
 // Delete command 
-bot.command('del', spamProtection, isAdmin, async (ctx) => {
+bot.command('del', spamProtection, isUserInDb, isAdmin, async (ctx) => {
   const rssUrl = ctx.message.text.split(' ')[1];
   if (!rssUrl) {
     return ctx.reply('Usage: /𝘥𝘦𝘭 𝘳𝘴𝘴_𝘶𝘳𝘭', { parse_mode: 'HTML' });
@@ -224,7 +247,7 @@ bot.command('del', spamProtection, isAdmin, async (ctx) => {
 });
 
 // List command 
-bot.command('list', spamProtection, isAdmin, async (ctx) => {
+bot.command('list', spamProtection, isUserInDb, isAdmin, async (ctx) => {
   const chatId = ctx.chat.id.toString();
   const chat = await chatCollection.findOne({ chatId });
 
@@ -240,7 +263,7 @@ bot.command('list', spamProtection, isAdmin, async (ctx) => {
 });
 
 // Set command 
-bot.command('set', spamProtection, isAdmin, async (ctx) => {
+bot.command('set', spamProtection, isUserInDb, isAdmin, async (ctx) => {
   const chatId = ctx.chat.id.toString();
   const topicId = ctx.message.message_thread_id;
 
@@ -280,7 +303,7 @@ bot.command('send', async (ctx) => {
 });
 
 // Ping command 
-bot.command('ping', spamProtection, isAdmin, async (ctx) => {
+bot.command('ping', spamProtection, isUserInDb, isAdmin, async (ctx) => {
   const start = Date.now();
   try {
     const sentMessage = await ctx.reply('𝘗𝘰𝘯𝘨! 𝘊𝘩𝘦𝘤𝘬𝘪𝘯𝘨 𝘱𝘪𝘯𝘨...');
@@ -310,7 +333,7 @@ bot.command('ping', spamProtection, isAdmin, async (ctx) => {
 });
 
 // About command
-bot.command('about', spamProtection, async (ctx) => {
+bot.command('about', spamProtection, isUserInDb, async (ctx) => {
   const { version, description, author, homepage, license } = getBotDetails();
   const message =
     `<b>RSS-ify Version:</b> <i>${escapeHTML(version)}</i>\n\n` +
