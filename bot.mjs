@@ -388,7 +388,6 @@ const fetchRss = async (rssUrl) => {
   }
 };
 
-
 // Send RSS updates to Telegram
 const sendRssUpdates = async () => {
   const chats = await chatCollection.find({ rssFeeds: { $exists: true, $not: { $size: 0 } } }).toArray();
@@ -436,15 +435,15 @@ async function startCycle() {
   if (isProcessing) return;
   isProcessing = true;
   try {
-    await sendRssUpdates(bot);
+    console.log('Starting RSS update cycle...');
+    await sendRssUpdates();
   } catch (err) {
     console.error('Error in sendRssUpdates:', err);
   } finally {
     isProcessing = false;
+    console.log('Cycle complete. Waiting 10 seconds before starting next cycle...');
+    setTimeout(startCycle, 10 * 1000); // Wait 10 seconds before next cycle
   }
-
-  // Trigger next cycle after 60secs
-  setTimeout(startCycle, 30 * 1000);
 }
 
 // Initialize the bot

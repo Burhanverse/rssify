@@ -11,7 +11,7 @@
     "telegraf": "^4.16.3"
   },
   "name": "rssify",
-  "version": "3.5.5",
+  "version": "3.5.6",
   "description": "RSS-ify brings you the latest updates from your favorite feeds right into Telegram, hassle-free!",
   "main": "bot.mjs",
   "scripts": {
