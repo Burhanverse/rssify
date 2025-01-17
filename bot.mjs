@@ -35,7 +35,6 @@ const initDatabase = async () => {
 // Middleware to check if the user exists in the database
 const isUserInDb = async (ctx, next) => {
   try {
-
     if (!db) {
       await initDatabase();
     }
@@ -45,15 +44,20 @@ const isUserInDb = async (ctx, next) => {
 
     const userExists = await chatCollection.findOne({ chatId: chatId.toString() });
     if (!userExists) {
-      console.log(`User with chat ID ${chatId} is NOT found in the database.`);
-      return ctx.reply('You are not registered in the database. Please contact the admin or use the /start command.');
+      console.log(`User with chat ID ${chatId} not found. Adding to database.`);
+      await chatCollection.insertOne({
+        chatId: chatId.toString(),
+      });
+
+      console.log(`User with chat ID ${chatId} added to the database.`);
+    } else {
+      console.log(`User with chat ID ${chatId} is already in the database.`);
     }
 
-    console.log(`User with chat ID ${chatId} is found in the database.`);
     return next();
   } catch (error) {
     console.error('Error in isUserInDb middleware:', error);
-    return ctx.reply('An error occurred while checking your user status. Please try again later.');
+    return ctx.reply('An error occurred while processing your request. Please try again later.');
   }
 };
 
@@ -141,7 +145,7 @@ const isAdmin = async (ctx, next) => {
   try {
     const chatMember = await ctx.telegram.getChatMember(ctx.chat.id, ctx.from.id);
     if (['administrator', 'creator'].includes(chatMember.status)) {
-      return next(); // User is an admin
+      return next();
     } else {
       return ctx.reply('𝘠𝘰𝘶 𝘮𝘶𝘴𝘵 𝘣𝘦 𝘢𝘯 𝘢𝘥𝘮𝘪𝘯 𝘵𝘰 𝘶𝘴𝘦 𝘵𝘩𝘪𝘴 𝘤𝘰𝘮𝘮𝘢𝘯𝘥.');
     }
@@ -312,7 +316,6 @@ bot.command('ping', spamProtection, isUserInDb, isAdmin, async (ctx) => {
     const sentMessage = await ctx.reply('𝘗𝘰𝘯𝘨! 𝘊𝘩𝘦𝘤𝘬𝘪𝘯𝘨 𝘱𝘪𝘯𝘨...');
     // Calculate the ping
     const ping = Date.now() - start;
-    // Wait for 1sec before editing the message
     await new Promise((resolve) => setTimeout(resolve, 1000));
     await ctx.telegram.editMessageText(
       ctx.chat.id,
@@ -376,7 +379,6 @@ const sendRssUpdates = async () => {
         const latestItem = items[0];
         const lastLog = await getLastLog(chatId, rssUrl);
 
-        // Avoid duplicate posts by checking title and URL
         if (lastLog && latestItem.link === lastLog.lastItemLink) {
           console.log(`No new updates for chat ${chatId} on feed ${rssUrl}`);
           continue;
@@ -398,7 +400,6 @@ const sendRssUpdates = async () => {
           }
         });
 
-        // Update logs after successful posting
         await updateLastLog(chatId, rssUrl, latestItem.title, latestItem.link);
       } catch (err) {
         console.error(`Failed to process feed ${rssUrl}:`, err.message);
@@ -410,24 +411,24 @@ const sendRssUpdates = async () => {
 let isProcessing = false;
 
 async function startCycle() {
-  if (isProcessing) return;  // Prevent starting a new cycle if the current one is still running
-  isProcessing = true;  // Mark as processing
+  if (isProcessing) return;
+  isProcessing = true;
   try {
     await sendRssUpdates(bot);
   } catch (err) {
     console.error('Error in sendRssUpdates:', err);
   } finally {
-    isProcessing = false;  // Mark as not processing once done
+    isProcessing = false;
   }
 
   // Trigger next cycle after 60secs
-  setTimeout(startCycle, 60 * 1000);
+  setTimeout(startCycle, 30 * 1000);
 }
 
 // Initialize the bot
 (async () => {
   await initDatabase();
-  startCycle();  // Start the cycle immediately
+  startCycle();
   bot.launch().then(() => {
     console.log('Bot is running...');
   });
