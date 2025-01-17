@@ -3,9 +3,15 @@ import path from 'path';
 import axios from 'axios';
 import { Telegraf } from 'telegraf';
 import { MongoClient } from 'mongodb';
+import { exec } from 'node:child_process';
+import { promisify } from 'node:util';
+import prettyBytes from 'pretty-bytes';
+
 import dotenv from 'dotenv';
 
 dotenv.config();
+
+const execPromise = promisify(exec);
 
 const BOT_TOKEN = process.env.TOKEN;
 const MONGO_URI = process.env.DB_URI;
@@ -74,6 +80,17 @@ const updateLastLog = async (chatId, rssUrl, lastItemTitle, lastItemLink) => {
     { upsert: true }
   );
 };
+
+// Store the bot start time
+const botStartTime = Date.now();
+
+function formatUptime(ms) {
+  const seconds = Math.floor(ms / 1000);
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const secs = seconds % 60;
+  return `${hours}h ${minutes}m ${secs}s`;
+}
 
 // Escape HTML helper function
 const escapeHTML = (text) => {
@@ -309,32 +326,37 @@ bot.command('send', async (ctx) => {
   ctx.reply('𝘔𝘦𝘴𝘴𝘢𝘨𝘦 𝘧𝘰𝘳𝘸𝘢𝘳𝘥𝘦𝘥 𝘴𝘶𝘤𝘤𝘦𝘴𝘴𝘧𝘶𝘭𝘭𝘺.');
 });
 
-// Ping command 
-bot.command('ping', spamProtection, isUserInDb, isAdmin, async (ctx) => {
+// /stats command implementation
+bot.command('stats', spamProtection, isUserInDb, isAdmin, async (ctx) => {
   const start = Date.now();
+
   try {
-    const sentMessage = await ctx.reply('𝘗𝘰𝘯𝘨! 𝘊𝘩𝘦𝘤𝘬𝘪𝘯𝘨 𝘱𝘪𝘯𝘨...');
-    // Calculate the ping
+    // Calculate bot uptime
+    const botUptime = formatUptime(Date.now() - botStartTime);
+
+    // Get network usage
+    const { stdout: networkOutput } = await execPromise('cat /sys/class/net/eth0/statistics/rx_bytes /sys/class/net/eth0/statistics/tx_bytes');
+    const [rxBytes, txBytes] = networkOutput.trim().split('\n').map((val) => parseInt(val, 10));
+    const inbound = prettyBytes(rxBytes);
+    const outbound = prettyBytes(txBytes);
+
+    // Calculate bot ping
     const ping = Date.now() - start;
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    await ctx.telegram.editMessageText(
-      ctx.chat.id,
-      sentMessage.message_id,
-      null,
-      `𝘗𝘪𝘯𝘨: ${ping} ms`
+
+    const stats =
+      `<b>Bot Stats</b>\n\n` +
+      `⋗ <b>Ping:</b> <i>${ping} ms </i> \n` +
+      `⋗ <b>Uptime:</b> <i>${botUptime} </i> \n` +
+      `⋗ <b>Inbound:</b> <i>${inbound} </i>\n` +
+      `⋗ <b>Outbound:</b> <i>${outbound} </i>`;
+    await ctx.reply(
+      stats,
+      { parse_mode: 'HTML' }
     );
+
   } catch (err) {
-    try {
-      await ctx.telegram.editMessageText(
-        ctx.chat.id,
-        sentMessage.message_id,
-        null,
-        '𝘌𝘳𝘳𝘰𝘳 𝘸𝘩𝘪𝘭𝘦 𝘤𝘩𝘦𝘤𝘬𝘪𝘯𝘨 𝘱𝘪𝘯𝘨.'
-      );
-    } catch (editErr) {
-      console.error('Error editing ping message:', editErr);
-    }
-    console.error('Ping command error:', err);
+    console.error('Error in /stats command:', err);
+    await ctx.reply('An error occurred while fetching stats. Please try again later.');
   }
 });
 
