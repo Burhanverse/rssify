@@ -86,10 +86,14 @@ const botStartTime = Date.now();
 
 function formatUptime(ms) {
   const seconds = Math.floor(ms / 1000);
-  const hours = Math.floor(seconds / 3600);
+  const days = Math.floor(seconds / 86400);
+  const hours = Math.floor((seconds % 86400) / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
   const secs = seconds % 60;
-  return `${hours}h ${minutes}m ${secs}s`;
+
+  return days > 0
+    ? `${days}d ${hours}h ${minutes}m ${secs}s`
+    : `${hours}h ${minutes}m ${secs}s`;
 }
 
 // Escape HTML helper function
