@@ -1,7 +1,9 @@
 node_modules
 .codebuddy
 config.json
+beta.mjs
 .env
 *.bak
+main.env
 test.env
 *.md

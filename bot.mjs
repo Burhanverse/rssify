@@ -1,12 +1,12 @@
+// Import grammY framework
+import { Bot } from 'grammy';
 import fs from 'fs';
 import path from 'path';
 import axios from 'axios';
-import { Telegraf } from 'telegraf';
 import { MongoClient } from 'mongodb';
 import { exec } from 'node:child_process';
 import { promisify } from 'node:util';
 import prettyBytes from 'pretty-bytes';
-
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -18,7 +18,7 @@ const MONGO_URI = process.env.DB_URI;
 const DATABASE_NAME = process.env.DB_NAME || 'rssify';
 
 // Initialize
-const bot = new Telegraf(BOT_TOKEN);
+const bot = new Bot(BOT_TOKEN);
 const client = new MongoClient(MONGO_URI);
 
 // MongoDB connection and collections
@@ -94,14 +94,14 @@ function formatUptime(ms) {
 
 // Escape HTML helper function
 const escapeHTML = (text) => {
-  return text.replace(/[&<>"'’]/g, (char) => {
+  return text.replace(/[&<>"'']/g, (char) => {
     switch (char) {
       case '&': return '&amp;';
       case '<': return '&lt;';
       case '>': return '&gt;';
       case '"': return '&quot;';
       case "'": return '&#39;';
-      case '’': return '&#8217;';
+      case `'`: return '&#8217;';
       default: return char;
     }
   });
@@ -196,7 +196,7 @@ const getBotDetails = () => {
 };
 
 // Bot start command
-bot.start(spamProtection, isUserInDb, isAdmin, (ctx) => {
+bot.command('start', spamProtection, isUserInDb, isAdmin, (ctx) => {
   ctx.reply(
     '🤖 <i>RSS-ify brings you the latest updates from your favorite feeds right into Telegram, hassle-free!</i>\n\n' +
     '<b>⚙️ Supported feed types:</b> <i>Atom, RSS2.0 & RSS1.0</i>\n\n' +
@@ -245,8 +245,8 @@ bot.command('add', spamProtection, isUserInDb, isAdmin, async (ctx) => {
 
     // Send the latest feed item as a message
     const message = `<b>${escapeHTML(latestItem.title)}</b>\n\n` +
-      `<a href="${escapeHTML(latestItem.link)}">Source</a> | <a href="burhanverse.t.me"><i>Prjkt:Sid.</i></a>`;
-    await bot.telegram.sendMessage(chatId, message, {
+      `<a href="${escapeHTML(latestItem.link)}">𝘚𝘰𝘶𝘳𝘤𝘦</a> | <a href="burhanverse.t.me"><i>Prjkt:Sid.</i></a>`;
+    await bot.api.sendMessage(chatId, message, {
       parse_mode: 'HTML',
       ...(ctx.message.message_thread_id && { message_thread_id: parseInt(ctx.message.message_thread_id) }),
     });
@@ -317,13 +317,13 @@ bot.command('send', async (ctx) => {
 
   for (const subscriber of subscribers) {
     try {
-      await bot.telegram.forwardMessage(subscriber.chatId, chatId, originalMessage.message_id);
+      await bot.api.forwardMessage(subscriber.chatId, chatId, originalMessage.message_id);
     } catch (err) {
       console.error(`Failed to send message to ${subscriber.chatId}:`, err);
     }
   }
 
-  ctx.reply('𝘔𝘦𝘴𝘴𝘢𝘨𝘦 𝘧𝘰𝘳𝘸𝘢𝘳𝘥𝘦𝘥 𝘴𝘶𝘤𝘤𝘦𝘴𝘴𝘧𝘶𝘭𝘭𝘺.');
+  ctx.reply('𝘔𝘦𝘴𝘴𝘢𝘨𝘦 𝘧𝘰𝘳𝘸𝘢𝘳𝘥𝘦𝘥 𝘴𝘶𝘤𝘤𝘦𝘴𝘧𝘶𝘭𝘭𝘺.');
 });
 
 // /stats command implementation
@@ -340,7 +340,6 @@ bot.command('stats', spamProtection, isUserInDb, isAdmin, async (ctx) => {
     const inbound = prettyBytes(rxBytes);
     const outbound = prettyBytes(txBytes);
 
-    // Calculate bot ping
     const ping = Date.now() - start;
 
     const stats =
@@ -408,7 +407,7 @@ const sendRssUpdates = async () => {
         const message = `<b>${escapeHTML(latestItem.title)}</b>\n\n` +
           `<a href="${escapeHTML(latestItem.link)}">𝘚𝘰𝘶𝘳𝘤𝘦</a> | <a href="burhanverse.t.me"><i>Prjkt:Sid.</i></a>`;
 
-        await bot.telegram.sendMessage(chatId, message, {
+        await bot.api.sendMessage(chatId, message, {
           parse_mode: 'HTML',
           ...(topicId && { message_thread_id: parseInt(topicId) }),
         }).catch(async (error) => {
@@ -442,15 +441,12 @@ async function startCycle() {
   } finally {
     isProcessing = false;
     console.log('Cycle complete. Waiting 10 seconds before starting next cycle...');
-    setTimeout(startCycle, 10 * 1000); // Wait 10 seconds before next cycle
+    setTimeout(startCycle, 10 * 1000);
   }
 }
 
-// Initialize the bot
 (async () => {
   await initDatabase();
   startCycle();
-  bot.launch().then(() => {
-    console.log('Bot is running...');
-  });
+  bot.start();
 })();
