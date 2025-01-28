@@ -369,7 +369,7 @@ bot.command('about', spamProtection, isUserInDb, async (ctx) => {
     `<b>Project Page:</b> <i><a href="${escapeHTML(homepage)}">Link</a></i>\n` +
     `<b>Author:</b> <i>${escapeHTML(author)}</i>\n` +
     `<b>License:</b> <i>${escapeHTML(license)}</i>\n` +
-    `<b>Copyright:</b> <i><i>${escapeHTML(copyright)}</i>`;
+    `<b>Copyright:</b> <i>${escapeHTML(copyright)}</i>`;
 
   await ctx.reply(message, {
     parse_mode: 'HTML',
