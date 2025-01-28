@@ -1,4 +1,3 @@
-// Import grammY framework
 import { Bot } from 'grammy';
 import fs from 'fs';
 import path from 'path';

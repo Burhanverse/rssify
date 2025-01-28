@@ -6,4 +6,3 @@ beta.mjs
 *.bak
 main.env
 test.env
-*.md
