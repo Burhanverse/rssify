@@ -11,7 +11,7 @@
     "pretty-bytes": "^6.1.1"
   },
   "name": "rssify",
-  "version": "3.6.1",
+  "version": "3.6.2",
   "description": "RSS-ify brings you the latest updates from your favorite feeds right into Telegram, hassle-free!",
   "main": "bot.mjs",
   "scripts": {
@@ -25,7 +25,8 @@
     "url": "git+https://github.com/Burhanverse/rssify.git"
   },
   "author": "@Burhanverse",
-  "license": "Prjkt:Sid. - Proprietary License",
+  "license": "MIT License",
+  "copyright": "Copyright (c) 2025 Burhanverse",
   "bugs": {
     "url": "https://github.com/Burhanverse/rssify/issues"
   },

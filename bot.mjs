@@ -186,14 +186,12 @@ const getBotDetails = () => {
       author: packageData.author,
       homepage: packageData.homepage,
       license: packageData.license,
+      copyright: packageData.copyright,
     };
   } catch (err) {
     console.error('Failed to read package.json:', err.message);
     return {
       version: 'Unknown',
-      description: 'RSS-ify brings you the latest updates from your favorite feeds right into Telegram, hassle-free!',
-      author: 'Burhanverse',
-      license: '𝘗𝘳𝘫𝘬𝘵:𝘚𝘪𝘥. - Proprietary License',
     };
   }
 };
@@ -364,13 +362,14 @@ bot.command('stats', spamProtection, isUserInDb, isAdmin, async (ctx) => {
 
 // About command
 bot.command('about', spamProtection, isUserInDb, async (ctx) => {
-  const { version, description, author, homepage, license } = getBotDetails();
+  const { version, description, author, homepage, license, copyright } = getBotDetails();
   const message =
     `<b>RSS-ify Version:</b> <i>${escapeHTML(version)}</i>\n\n` +
     `<b>Description:</b> <i>${escapeHTML(description)}</i>\n` +
     `<b>Project Page:</b> <i><a href="${escapeHTML(homepage)}">Link</a></i>\n` +
     `<b>Author:</b> <i>${escapeHTML(author)}</i>\n` +
-    `<b>License:</b> <i>${escapeHTML(license)}</i>`;
+    `<b>License:</b> <i>${escapeHTML(license)}</i>\n` +
+    `<b>Copyright:</b> <i><i>${escapeHTML(copyright)}</i>`;
 
   await ctx.reply(message, {
     parse_mode: 'HTML',
@@ -403,19 +402,19 @@ const sendRssUpdates = async () => {
         const lastLog = await getLastLog(chatId, rssUrl);
 
         if (lastLog && latestItem.link === lastLog.lastItemLink) {
-          console.log(`No new updates for chat ${chatId} on feed ${rssUrl}`);
+          console.log(`No new updates for chat ${chatId} on feed ${rssUrl} `);
           continue;
         }
 
-        const message = `<b>${escapeHTML(latestItem.title)}</b>\n\n` +
-          `<a href="${escapeHTML(latestItem.link)}">𝘚𝘰𝘶𝘳𝘤𝘦</a> | <a href="burhanverse.t.me"><i>Prjkt:Sid.</i></a>`;
+        const message = `< b > ${escapeHTML(latestItem.title)}</ >\n\n` +
+          `< a href = "${escapeHTML(latestItem.link)}" > 𝘚𝘰𝘶𝘳𝘤𝘦</ > | <a href="burhanverse.t.me"><i>Prjkt:Sid.</i></a>`;
 
         await bot.api.sendMessage(chatId, message, {
           parse_mode: 'HTML',
           ...(topicId && { message_thread_id: parseInt(topicId) }),
         }).catch(async (error) => {
           if (error.on?.payload?.chat_id) {
-            console.error(`Failed to send message to chat ID: ${error.on.payload.chat_id}`);
+            console.error(`Failed to send message to chat ID: ${error.on.payload.chat_id} `);
             await chatCollection.deleteOne({ chatId });
             console.log('Deleted chat from database:', error.on.payload.chat_id);
           } else {
@@ -425,7 +424,7 @@ const sendRssUpdates = async () => {
 
         await updateLastLog(chatId, rssUrl, latestItem.title, latestItem.link);
       } catch (err) {
-        console.error(`Failed to process feed ${rssUrl}:`, err.message);
+        console.error(`Failed to process feed ${rssUrl}: `, err.message);
       }
     }
   }
