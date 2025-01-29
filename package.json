@@ -12,6 +12,7 @@
   },
   "name": "rssify",
   "version": "3.6.3",
+  "apivar": "2.0",
   "description": "RSS-ify brings you the latest updates from your favorite feeds right into Telegram, hassle-free!",
   "main": "bot.mjs",
   "scripts": {

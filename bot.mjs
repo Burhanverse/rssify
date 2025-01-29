@@ -182,6 +182,7 @@ const getBotDetails = () => {
     const packageData = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
     return {
       version: packageData.version,
+      apivar: packageData.apivar,
       description: packageData.description,
       author: packageData.author,
       homepage: packageData.homepage,
@@ -362,9 +363,10 @@ bot.command('stats', spamProtection, isUserInDb, isAdmin, async (ctx) => {
 
 // About command
 bot.command('about', spamProtection, isUserInDb, async (ctx) => {
-  const { version, description, author, homepage, license, copyright } = getBotDetails();
+  const { version, apivar, description, author, homepage, license, copyright } = getBotDetails();
   const message =
     `<b>RSS-ify Version:</b> <i>${escapeHTML(version)}</i>\n\n` +
+    `<b>Parser API:</b> <i>${escapeHTML(apivar)}</i>\n` +
     `<b>Description:</b> <i>${escapeHTML(description)}</i>\n` +
     `<b>Project Page:</b> <i><a href="${escapeHTML(homepage)}">Link</a></i>\n` +
     `<b>Author:</b> <i>${escapeHTML(author)}</i>\n` +
