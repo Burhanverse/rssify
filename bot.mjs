@@ -37,35 +37,6 @@ const initDatabase = async () => {
   }
 };
 
-// Middleware to check if the user exists in the database
-const isUserInDb = async (ctx, next) => {
-  try {
-    if (!db) {
-      await initDatabase();
-    }
-
-    const chatId = ctx.chat.id;
-    console.log(`Checking if user with chat ID ${chatId} exists in the database...`);
-
-    const userExists = await chatCollection.findOne({ chatId: chatId.toString() });
-    if (!userExists) {
-      console.log(`User with chat ID ${chatId} not found. Adding to database.`);
-      await chatCollection.insertOne({
-        chatId: chatId.toString(),
-      });
-
-      console.log(`User with chat ID ${chatId} added to the database.`);
-    } else {
-      console.log(`User with chat ID ${chatId} is already in the database.`);
-    }
-
-    return next();
-  } catch (error) {
-    console.error('Error in isUserInDb middleware:', error);
-    return ctx.reply('An error occurred while processing your request. Please try again later.');
-  }
-};
-
 // Last log functions
 const getLastLog = async (chatId, rssUrl) => {
   return await logCollection.findOne({ chatId, rssUrl });
@@ -97,14 +68,14 @@ function formatUptime(ms) {
 
 // Escape HTML helper function
 const escapeHTML = (text) => {
-  return text.replace(/[&<>"'']/g, (char) => {
+  return text.replace(/[&<>"'’]/g, (char) => {
     switch (char) {
       case '&': return '&amp;';
       case '<': return '&lt;';
       case '>': return '&gt;';
       case '"': return '&quot;';
       case "'": return '&#39;';
-      case `'`: return '&#8217;';
+      case '’': return '&#8217;';
       default: return char;
     }
   });
@@ -198,7 +169,7 @@ const getBotDetails = () => {
 };
 
 // Bot start command
-bot.command('start', spamProtection, isUserInDb, isAdmin, (ctx) => {
+bot.command('start', spamProtection, isAdmin, (ctx) => {
   ctx.reply(
     '🤖 <i>RSS-ify brings you the latest updates from your favorite feeds right into Telegram, hassle-free!</i>\n\n' +
     '<b>⚙️ Supported feed types:</b> <i>Atom, RSS2.0 & RSS1.0</i>\n\n' +
@@ -217,7 +188,7 @@ bot.command('start', spamProtection, isUserInDb, isAdmin, (ctx) => {
 });
 
 // Add command 
-bot.command('add', spamProtection, isUserInDb, isAdmin, async (ctx) => {
+bot.command('add', spamProtection, isAdmin, async (ctx) => {
   const rssUrl = ctx.message.text.split(' ')[1];
   if (!rssUrl) {
     return ctx.reply('Usage: /𝘢𝘥𝘥 𝘳𝘴𝘴_𝘶𝘳𝘭', { parse_mode: 'HTML' });
@@ -259,7 +230,7 @@ bot.command('add', spamProtection, isUserInDb, isAdmin, async (ctx) => {
 });
 
 // Delete command 
-bot.command('del', spamProtection, isUserInDb, isAdmin, async (ctx) => {
+bot.command('del', spamProtection, isAdmin, async (ctx) => {
   const rssUrl = ctx.message.text.split(' ')[1];
   if (!rssUrl) {
     return ctx.reply('Usage: /𝘥𝘦𝘭 𝘳𝘴𝘴_𝘶𝘳𝘭', { parse_mode: 'HTML' });
@@ -273,7 +244,7 @@ bot.command('del', spamProtection, isUserInDb, isAdmin, async (ctx) => {
 });
 
 // List command 
-bot.command('list', spamProtection, isUserInDb, isAdmin, async (ctx) => {
+bot.command('list', spamProtection, isAdmin, async (ctx) => {
   const chatId = ctx.chat.id.toString();
   const chat = await chatCollection.findOne({ chatId });
 
@@ -289,7 +260,7 @@ bot.command('list', spamProtection, isUserInDb, isAdmin, async (ctx) => {
 });
 
 // Set command 
-bot.command('set', spamProtection, isUserInDb, isAdmin, async (ctx) => {
+bot.command('set', spamProtection, isAdmin, async (ctx) => {
   const chatId = ctx.chat.id.toString();
   const topicId = ctx.message.message_thread_id;
 
@@ -329,7 +300,7 @@ bot.command('send', async (ctx) => {
 });
 
 // /stats command implementation
-bot.command('stats', spamProtection, isUserInDb, isAdmin, async (ctx) => {
+bot.command('stats', spamProtection, isAdmin, async (ctx) => {
   const start = Date.now();
 
   try {
@@ -362,7 +333,7 @@ bot.command('stats', spamProtection, isUserInDb, isAdmin, async (ctx) => {
 });
 
 // About command
-bot.command('about', spamProtection, isUserInDb, async (ctx) => {
+bot.command('about', spamProtection, async (ctx) => {
   const { version, apivar, description, author, homepage, license, copyright } = getBotDetails();
   const message =
     `<b>About RSS-ify:</b>\n\n` +
