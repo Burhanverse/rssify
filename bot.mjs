@@ -336,9 +336,8 @@ bot.command('stats', spamProtection, isAdmin, async (ctx) => {
 bot.command('about', spamProtection, async (ctx) => {
   const { version, apivar, description, author, homepage, license, copyright } = getBotDetails();
   const message =
-    `<b>About RSS-ify:</b>\n\n` +
-    `<b>Description:</b> <i>${escapeHTML(description)}</i>\n` +
-    `<b>Bot Version:</b> <i>${escapeHTML(version)}</i>\n` +
+    `<b>About Bot:</b> <i>${escapeHTML(description)}</i>\n\n` +
+    `<b>Client Version:</b> <i>${escapeHTML(version)}</i>\n` +
     `<b>Parser API:</b> <i>${escapeHTML(apivar)}</i>\n` +
     `<b>Project Page:</b> <i><a href="${escapeHTML(homepage)}">Link</a></i>\n` +
     `<b>Author:</b> <i>${escapeHTML(author)}</i>\n` +
