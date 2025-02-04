@@ -91,25 +91,25 @@ const spamProtection = async (ctx, next) => {
     // Retrieve spam data
     const user = await spamCollection.findOne({ userId });
     if (user?.blockUntil && new Date(user.blockUntil) > now) {
-      return ctx.reply('You are blocked for spamming. Wait until the cooldown expires.');
+      return ctx.reply('𝘠𝘰𝘶 𝘢𝘳𝘦 𝘣𝘭𝘰𝘤𝘬𝘦𝘥 𝘧𝘰𝘳 𝘴𝘱𝘢𝘮𝘮𝘪𝘯𝘨. 𝘞𝘢𝘪𝘵 𝘶𝘯𝘵𝘪𝘭 𝘵𝘩𝘦 𝘤𝘰𝘰𝘭𝘥𝘰𝘸𝘯 𝘦𝘹𝘱𝘪𝘳𝘦𝘴.');
     }
 
     const recentCommands = (user?.commands || []).filter(cmd =>
       cmd.command === command && new Date(cmd.timestamp) > now - 60 * 1000
     );
 
-    if (recentCommands.length >= 3) {
+    if (recentCommands.length >= 4) {
       const warnings = (user?.warnings || 0) + 1;
 
       if (warnings >= 3) {
         await spamCollection.updateOne({ userId }, {
-          $set: { blockUntil: new Date(now.getTime() + 24 * 60 * 60 * 1000) },
+          $set: { blockUntil: new Date(now.getTime() + 12 * 60 * 60 * 1000) },
           $unset: { commands: '' }
         });
-        return ctx.reply('You are blocked for 24 hours for repeated spamming.');
+        return ctx.reply('𝘠𝘰𝘶 𝘢𝘳𝘦 𝘣𝘭𝘰𝘤𝘬𝘦𝘥 𝘧𝘰𝘳 12 𝘩𝘰𝘶𝘳𝘴 𝘧𝘰𝘳 𝘳𝘦𝘱𝘦𝘢𝘵𝘦𝘥 𝘴𝘱𝘢𝘮𝘮𝘪𝘯𝘨.');
       } else {
         await spamCollection.updateOne({ userId }, { $set: { warnings }, $push: { commands: { command, timestamp: now } } });
-        return ctx.reply(`Stop spamming. Warning ${warnings}/3.`);
+        return ctx.reply(`𝘚𝘵𝘰𝘱 𝘴𝘱𝘢𝘮𝘮𝘪𝘯𝘨. 𝘞𝘢𝘳𝘯𝘪𝘯𝘨 ${warnings}/3.`);
       }
     }
 
@@ -204,7 +204,10 @@ bot.command('add', spamProtection, isAdmin, async (ctx) => {
 
     // Add the feed to the database
     await chatCollection.updateOne({ chatId }, { $addToSet: { rssFeeds: rssUrl } }, { upsert: true });
-    ctx.reply(`𝘍𝘦𝘦𝘥 𝘢𝘥𝘥𝘦𝘥: ${escapeHTML(rssUrl)}`, { parse_mode: 'HTML' });
+    ctx.reply(`𝘍𝘦𝘦𝘥 𝘢𝘥𝘥𝘦𝘥: ${escapeHTML(rssUrl)}`, {
+      parse_mode: 'HTML',
+      disable_web_page_preview: true,
+    });
 
     // Update the last log with the latest feed item
     const latestItem = items[0];
@@ -219,7 +222,10 @@ bot.command('add', spamProtection, isAdmin, async (ctx) => {
     });
 
   } catch (err) {
-    ctx.reply(`Failed to add feed: ${escapeHTML(err.message)}`, { parse_mode: 'HTML' });
+    ctx.reply(`𝘍𝘢𝘪𝘭𝘦𝘥 𝘵𝘰 𝘢𝘥𝘥 𝘧𝘦𝘦𝘥: ${escapeHTML(err.message)}`, {
+      parse_mode: 'HTML',
+      disable_web_page_preview: true,
+    });
   }
 });
 
@@ -243,7 +249,10 @@ bot.command('list', spamProtection, isAdmin, async (ctx) => {
   const chat = await chatCollection.findOne({ chatId });
 
   if (!chat?.rssFeeds?.length) {
-    return ctx.reply('𝘕𝘰 𝘍𝘦𝘦𝘥𝘴 𝘢𝘥𝘥𝘦𝘥.', { parse_mode: 'Markdown' });
+    return ctx.reply('𝘕𝘰 𝘍𝘦𝘦𝘥𝘴 𝘢𝘥𝘥𝘦𝘥.', {
+      parse_mode: 'Markdown',
+      disable_web_page_preview: true,
+    });
   }
 
   const feeds = chat.rssFeeds.map((url, i) => `${i + 1}. <a href="${escapeHTML(url)}">${escapeHTML(url)}</a>`).join('\n');
@@ -319,7 +328,7 @@ bot.command('stats', spamProtection, async (ctx) => {
 
   } catch (err) {
     console.error('Error in /stats command:', err);
-    await ctx.reply('An error occurred while fetching stats. Please try again later.');
+    await ctx.reply('𝘈𝘯 𝘦𝘳𝘳𝘰𝘳 𝘰𝘤𝘤𝘶𝘳𝘳𝘦𝘥 𝘸𝘩𝘪𝘭𝘦 𝘧𝘦𝘵𝘤𝘩𝘪𝘯𝘨 𝘴𝘵𝘢𝘵𝘴. 𝘗𝘭𝘦𝘢𝘴𝘦 𝘵𝘳𝘺 𝘢𝘨𝘢𝘪𝘯 𝘭𝘢𝘵𝘦𝘳.');
   }
 });
 

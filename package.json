@@ -8,6 +8,7 @@
     "grammy": "^1.34.0",
     "markdown-escape": "^2.0.0",
     "mongodb": "^6.11.0",
+    "p-limit": "^6.2.0",
     "pretty-bytes": "^6.1.1"
   },
   "name": "rssify",
