@@ -134,7 +134,7 @@ const isAdmin = async (ctx, next) => {
   }
 
   try {
-    const chatMember = await ctx.telegram.getChatMember(ctx.chat.id, ctx.from.id);
+    const chatMember = await ctx.api.getChatMember(ctx.chat.id, ctx.from.id);
     if (['administrator', 'creator'].includes(chatMember.status)) {
       return next();
     } else {
@@ -172,14 +172,8 @@ const getBotDetails = () => {
 bot.command('start', spamProtection, isAdmin, (ctx) => {
   ctx.reply(
     '🤖 <i>RSS-ify brings you the latest updates from your favorite feeds right into Telegram, hassle-free!</i>\n\n' +
-    '<b>⚙️ Supported feed types:</b> <i>Atom, RSS2.0 & RSS1.0</i>\n\n' +
-    '<b>⌨️ Available Commands:</b>\n' +
-    '/add FeedURL - <i>Add a feed</i>\n' +
-    '/del FeedURL - <i>Delete a feed</i>\n' +
-    '/list - <i>List of your subscribed feeds</i>\n' +
-    '/set - <i>Set topic for RSS updates (group only)</i>\n' +
-    '/about - <i>About RSS-ify version, description, etc...</i>\n\n' +
-    '©️<a href="burhanverse.t.me"><i>Prjkt:Sid.</i></a>',
+    '<b>Homepage:</b> <a href="burhanverse.eu.org/blog/rssify"><i>visit now!</i>\n\n' +
+    '<a href="burhanverse.t.me"><i>Prjkt:Sid.</i></a>',
     {
       parse_mode: 'HTML',
       disable_web_page_preview: true,
@@ -191,7 +185,7 @@ bot.command('start', spamProtection, isAdmin, (ctx) => {
 bot.command('add', spamProtection, isAdmin, async (ctx) => {
   const rssUrl = ctx.message.text.split(' ')[1];
   if (!rssUrl) {
-    return ctx.reply('Usage: /𝘢𝘥𝘥 𝘳𝘴𝘴_𝘶𝘳𝘭', { parse_mode: 'HTML' });
+    return ctx.reply('Usage: /add 𝘳𝘴𝘴_𝘶𝘳𝘭', { parse_mode: 'HTML' });
   }
 
   const chatId = ctx.chat.id.toString();
@@ -233,7 +227,7 @@ bot.command('add', spamProtection, isAdmin, async (ctx) => {
 bot.command('del', spamProtection, isAdmin, async (ctx) => {
   const rssUrl = ctx.message.text.split(' ')[1];
   if (!rssUrl) {
-    return ctx.reply('Usage: /𝘥𝘦𝘭 𝘳𝘴𝘴_𝘶𝘳𝘭', { parse_mode: 'HTML' });
+    return ctx.reply('Usage: /del 𝘳𝘴𝘴_𝘶𝘳𝘭', { parse_mode: 'HTML' });
   }
 
   const chatId = ctx.chat.id.toString();
@@ -299,15 +293,12 @@ bot.command('send', async (ctx) => {
   ctx.reply('𝘔𝘦𝘴𝘴𝘢𝘨𝘦 𝘧𝘰𝘳𝘸𝘢𝘳𝘥𝘦𝘥 𝘴𝘶𝘤𝘤𝘦𝘴𝘧𝘶𝘭𝘭𝘺.');
 });
 
-// /stats command implementation
-bot.command('stats', spamProtection, isAdmin, async (ctx) => {
+// /stats command implementation ( works only on ptrodactyl eggs )
+bot.command('stats', spamProtection, async (ctx) => {
   const start = Date.now();
 
   try {
-    // Calculate bot uptime
     const botUptime = formatUptime(Date.now() - botStartTime);
-
-    // Get network usage
     const { stdout: networkOutput } = await execPromise('cat /sys/class/net/eth0/statistics/rx_bytes /sys/class/net/eth0/statistics/tx_bytes');
     const [rxBytes, txBytes] = networkOutput.trim().split('\n').map((val) => parseInt(val, 10));
     const inbound = prettyBytes(rxBytes);
@@ -316,7 +307,7 @@ bot.command('stats', spamProtection, isAdmin, async (ctx) => {
     const ping = Date.now() - start;
 
     const stats =
-      `<b>Bot Stats</b>\n\n` +
+      `<i><b>Bot Server Stats</b></i>\n\n` +
       `⋗ <b>Ping:</b> <i>${ping} ms </i> \n` +
       `⋗ <b>Uptime:</b> <i>${botUptime} </i> \n` +
       `⋗ <b>Inbound:</b> <i>${inbound} </i>\n` +
