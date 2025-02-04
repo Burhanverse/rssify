@@ -172,7 +172,7 @@ const getBotDetails = () => {
 bot.command('start', spamProtection, isAdmin, (ctx) => {
   ctx.reply(
     '🤖 <i>RSS-ify brings you the latest updates from your favorite feeds right into Telegram, hassle-free!</i>\n\n' +
-    '<b>Homepage:</b> <a href="burhanverse.eu.org/blog/rssify"><i>visit now!</i>\n\n' +
+    '<b>Homepage:</b> <a href="burhanverse.eu.org/blog/rssify"><i>visit now!</i></a>\n\n' +
     '<a href="burhanverse.t.me"><i>Prjkt:Sid.</i></a>',
     {
       parse_mode: 'HTML',
