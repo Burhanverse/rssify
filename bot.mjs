@@ -240,7 +240,10 @@ bot.command('del', spamProtection, isAdmin, async (ctx) => {
   await chatCollection.updateOne({ chatId }, { $pull: { rssFeeds: rssUrl } });
   await logCollection.deleteOne({ chatId, rssUrl });
 
-  ctx.reply(`𝘍𝘦𝘦𝘥 𝘳𝘦𝘮𝘰𝘷𝘦𝘥: <a href="${escapeHTML(rssUrl)}">${escapeHTML(rssUrl)}</a>`, { parse_mode: 'HTML' });
+  ctx.reply(`𝘍𝘦𝘦𝘥 𝘳𝘦𝘮𝘰𝘷𝘦𝘥: <a href="${escapeHTML(rssUrl)}">${escapeHTML(rssUrl)}</a>`, {
+    parse_mode: 'HTML',
+    disable_web_page_preview: true,
+  });
 });
 
 // List command 
