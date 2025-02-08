@@ -44,9 +44,31 @@ const getLastLog = async (chatId, rssUrl) => {
 
 const updateLastLog = async (chatId, rssUrl, lastItemTitle, lastItemLink) => {
   const timestamp = new Date();
+
+  const existingLog = await logCollection.findOne({ chatId, rssUrl });
+  if (existingLog && existingLog.lastItems) {
+    const existingLinks = existingLog.lastItems.map(item => item.link);
+    if (existingLinks.includes(lastItemLink)) {
+      console.log(`Duplicate log entry detected for chat ${chatId} on feed ${rssUrl} with link ${lastItemLink}. Skipping update.`);
+      return;
+    }
+  }
+
   await logCollection.updateOne(
     { chatId, rssUrl },
-    { $set: { lastItemTitle, lastItemLink, timestamp } },
+    {
+      $push: {
+        lastItems: {
+          $each: [{ title: lastItemTitle, link: lastItemLink, timestamp }],
+          $sort: { timestamp: -1 }, // Sort by newest first
+          $slice: 5 // Keep only the latest 5 items
+        }
+      },
+      $unset: {
+        lastItemTitle: "",
+        lastItemLink: ""
+      }
+    },
     { upsert: true }
   );
 };
@@ -353,7 +375,7 @@ bot.command('about', spamProtection, async (ctx) => {
   });
 });
 
-// Fetch RSS feeds from api
+// Fetch RSS feeds from ParserAPI
 const fetchRss = async (rssUrl) => {
   try {
     const response = await axios.get('http://127.0.0.1:5000/parse', {
@@ -377,9 +399,19 @@ const sendRssUpdates = async () => {
         const latestItem = items[0];
         const lastLog = await getLastLog(chatId, rssUrl);
 
-        if (lastLog && latestItem.link === lastLog.lastItemLink) {
-          console.log(`No new updates for chat ${chatId} on feed ${rssUrl}`);
-          continue;
+        if (lastLog) {
+          let existingLinks = [];
+          if (lastLog.lastItems && lastLog.lastItems.length > 0) {
+            existingLinks = lastLog.lastItems.map(item => item.link);
+          } else {
+            if (lastLog.lastItemLink) {
+              existingLinks.push(lastLog.lastItemLink);
+            }
+          }
+          if (existingLinks.includes(latestItem.link)) {
+            console.log(`Duplicate detected for chat ${chatId} on feed ${rssUrl}`);
+            continue;
+          }
         }
 
         const message = `<b>${escapeHTML(latestItem.title)}</b>\n\n` +

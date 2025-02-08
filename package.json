@@ -12,8 +12,8 @@
     "pretty-bytes": "^6.1.1"
   },
   "name": "rssify",
-  "version": "3.6.7",
-  "apivar": "2.3",
+  "version": "3.7.0",
+  "apivar": "3.2",
   "description": "RSS-ify brings you the latest updates from your favorite feeds right into Telegram, hassle-free!",
   "main": "bot.mjs",
   "scripts": {
