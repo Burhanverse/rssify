@@ -179,6 +179,7 @@ const getBotDetails = () => {
       description: packageData.description,
       author: packageData.author,
       homepage: packageData.homepage,
+      issues: packageData.bugs.url,
       license: packageData.license,
       copyright: packageData.copyright,
     };
@@ -359,13 +360,14 @@ bot.command('stats', spamProtection, async (ctx) => {
 
 // About command
 bot.command('about', spamProtection, async (ctx) => {
-  const { version, apivar, description, author, homepage, license, copyright } = getBotDetails();
+  const { version, apivar, description, author, homepage, issues, license, copyright } = getBotDetails();
   const message =
     `<b>About Bot:</b> <i>${escapeHTML(description)}</i>\n\n` +
     `<b>Client Version:</b> <i>${escapeHTML(version)}</i>\n` +
     `<b>Parser API:</b> <i>${escapeHTML(apivar)}</i>\n` +
-    `<b>Project Page:</b> <i><a href="${escapeHTML(homepage)}">Link</a></i>\n` +
     `<b>Author:</b> <i>${escapeHTML(author)}</i>\n` +
+    `<b>Issues:</b> <i><a href="${escapeHTML(issues)}">Report Now!</a></i>\n` +
+    `<b>Project Page:</b> <i><a href="${escapeHTML(homepage)}">Check NOw!</a></i>\n` +
     `<b>License:</b> <i>${escapeHTML(license)}</i>\n` +
     `<b>Copyright:</b> <i>${escapeHTML(copyright)}</i>`;
 
