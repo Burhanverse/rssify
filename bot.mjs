@@ -42,31 +42,35 @@ const getLastLog = async (chatId, rssUrl) => {
   return await logCollection.findOne({ chatId, rssUrl });
 };
 
-const updateLastLog = async (chatId, rssUrl, lastItemTitle, lastItemLink) => {
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+const updateLastLog = async (chatId, rssUrl, items) => {
   const timestamp = new Date();
 
-  const existingLog = await logCollection.findOne({ chatId, rssUrl });
-  if (existingLog && existingLog.lastItems) {
-    const existingLinks = existingLog.lastItems.map(item => item.link);
-    if (existingLinks.includes(lastItemLink)) {
-      console.log(`Duplicate log entry detected for chat ${chatId} on feed ${rssUrl} with link ${lastItemLink}. Skipping update.`);
-      return;
-    }
-  }
+  const itemsToPush = items.map(item => ({
+    title: item.title,
+    link: item.link,
+    timestamp: timestamp,
+  }));
+
+  const lastLog = await logCollection.findOne({ chatId, rssUrl });
+  const existingLinks = lastLog?.lastItems?.map(item => item.link) || [];
+
+  const uniqueItems = itemsToPush.filter(item =>
+    !existingLinks.includes(item.link)
+  );
+
+  if (uniqueItems.length === 0) return;
 
   await logCollection.updateOne(
     { chatId, rssUrl },
     {
       $push: {
         lastItems: {
-          $each: [{ title: lastItemTitle, link: lastItemLink, timestamp }],
-          $sort: { timestamp: -1 }, // Sort by newest first
-          $slice: 5 // Keep only the latest 5 items
+          $each: uniqueItems,
+          $sort: { timestamp: -1 },
+          $slice: 5
         }
-      },
-      $unset: {
-        lastItemTitle: "",
-        lastItemLink: ""
       }
     },
     { upsert: true }
@@ -392,50 +396,64 @@ const fetchRss = async (rssUrl) => {
 // Send RSS updates to Telegram
 const sendRssUpdates = async () => {
   const chats = await chatCollection.find({ rssFeeds: { $exists: true, $not: { $size: 0 } } }).toArray();
+
   for (const { chatId, topicId, rssFeeds } of chats) {
     for (const rssUrl of rssFeeds) {
       try {
         const items = await fetchRss(rssUrl);
         if (!items.length) continue;
 
-        const latestItem = items[0];
         const lastLog = await getLastLog(chatId, rssUrl);
+        const existingLinks = lastLog?.lastItems?.map(item => item.link) || [];
+        const newItems = [];
+        for (const item of items) {
+          if (existingLinks.includes(item.link)) break;
+          newItems.push(item);
+        }
 
-        if (lastLog) {
-          let existingLinks = [];
-          if (lastLog.lastItems && lastLog.lastItems.length > 0) {
-            existingLinks = lastLog.lastItems.map(item => item.link);
-          } else {
-            if (lastLog.lastItemLink) {
-              existingLinks.push(lastLog.lastItemLink);
-            }
-          }
-          if (existingLinks.includes(latestItem.link)) {
-            console.log(`Duplicate detected for chat ${chatId} on feed ${rssUrl}`);
+        if (newItems.length === 0) {
+          console.log(`No new items for ${rssUrl} in chat ${chatId}`);
+          continue;
+        }
+
+        const itemsToSend = [...newItems].reverse();
+
+        for (const item of itemsToSend) {
+          const currentLog = await getLastLog(chatId, rssUrl);
+          const currentLinks = currentLog?.lastItems?.map(item => item.link) || [];
+
+          if (currentLinks.includes(item.link)) {
+            console.log(`Duplicate detected in final check for ${item.link}`);
             continue;
+          }
+
+          const message = `<b>${escapeHTML(item.title)}</b>\n\n` +
+            `<a href="${escapeHTML(item.link)}">Source</a> | ` +
+            `<a href="https://burhanverse.t.me"><i>Prjkt:Sid.</i></a>`;
+
+          try {
+            await bot.api.sendMessage(chatId, message, {
+              parse_mode: 'HTML',
+              ...(topicId && { message_thread_id: parseInt(topicId) }),
+            });
+
+            await updateLastLog(chatId, rssUrl, [item]);
+            console.log(`Sent message for ${rssUrl} in chat ${chatId}`);
+            await delay(1000);
+
+          } catch (error) {
+            if (error.on?.payload?.chat_id) {
+              console.error(`Failed to send to chat ${error.on.payload.chat_id}`);
+              await chatCollection.deleteOne({ chatId });
+              console.log(`Deleted chat ${chatId} from database`);
+              break;
+            }
+            console.error('Send message error:', error.message);
           }
         }
 
-        const message = `<b>${escapeHTML(latestItem.title)}</b>\n\n` +
-          `<a href="${escapeHTML(latestItem.link)}">𝘚𝘰𝘶𝘳𝘤𝘦</a> | ` +
-          `<a href="https://burhanverse.t.me"><i>Prjkt:Sid.</i></a>`;
-
-        await bot.api.sendMessage(chatId, message, {
-          parse_mode: 'HTML',
-          ...(topicId && { message_thread_id: parseInt(topicId) }),
-        }).catch(async (error) => {
-          if (error.on?.payload?.chat_id) {
-            console.error(`Failed to send message to chat ID: ${error.on.payload.chat_id} `);
-            await chatCollection.deleteOne({ chatId });
-            console.log('Deleted chat from database:', error.on.payload.chat_id);
-          } else {
-            console.error('Unexpected error:', error.message);
-          }
-        });
-
-        await updateLastLog(chatId, rssUrl, latestItem.title, latestItem.link);
       } catch (err) {
-        console.error(`Failed to process feed ${rssUrl}:`, err.message);
+        console.error(`Error processing ${rssUrl}:`, err.message);
       }
     }
   }
