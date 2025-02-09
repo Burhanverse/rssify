@@ -217,7 +217,6 @@ bot.command('add', spamProtection, isAdmin, async (ctx) => {
 
   const chatId = ctx.chat.id.toString();
   try {
-    // Check if the feed already exists
     const chat = await chatCollection.findOne({ chatId });
     if (chat?.rssFeeds?.includes(rssUrl)) {
       return ctx.reply(`𝘍𝘦𝘦𝘥 𝘢𝘭𝘳𝘦𝘢𝘥𝘺 𝘦𝘹𝘪𝘴𝘵𝘴`, {
@@ -225,28 +224,25 @@ bot.command('add', spamProtection, isAdmin, async (ctx) => {
       });
     }
 
-    // Fetch and validate the RSS feed
     const items = await fetchRss(rssUrl);
     if (items.length === 0) throw new Error('𝘌𝘮𝘱𝘵𝘺 𝘧𝘦𝘦𝘥.');
 
-    // Add the feed to the database
     await chatCollection.updateOne({ chatId }, { $addToSet: { rssFeeds: rssUrl } }, { upsert: true });
     ctx.reply(`𝘍𝘦𝘦𝘥 𝘢𝘥𝘥𝘦𝘥: ${escapeHTML(rssUrl)}`, {
       parse_mode: 'HTML',
       disable_web_page_preview: true,
     });
 
-    // Update the last log with the latest feed item
     const latestItem = items[0];
-    await updateLastLog(chatId, rssUrl, latestItem.title, latestItem.link);
+    await updateLastLog(chatId, rssUrl, [latestItem]);
 
-    // Send the latest feed item as a message
     const message = `<b>${escapeHTML(latestItem.title)}</b>\n\n` +
-      `<a href="${escapeHTML(latestItem.link)}">𝘚𝘰𝘶𝘳𝘤𝘦</a> | <a href="burhanverse.t.me"><i>Prjkt:Sid.</i></a>`;
+      `<a href="${escapeHTML(latestItem.link)}"><i>Source</i></a>`;
     await bot.api.sendMessage(chatId, message, {
       parse_mode: 'HTML',
       ...(ctx.message.message_thread_id && { message_thread_id: parseInt(ctx.message.message_thread_id) }),
     });
+    console.log(`Chat ${chatId} added a new feed URL: ${rssUrl}`);
 
   } catch (err) {
     ctx.reply(`𝘍𝘢𝘪𝘭𝘦𝘥 𝘵𝘰 𝘢𝘥𝘥 𝘧𝘦𝘦𝘥: ${escapeHTML(err.message)}`, {
@@ -397,16 +393,36 @@ const fetchRss = async (rssUrl) => {
 const sendRssUpdates = async () => {
   const chats = await chatCollection.find({ rssFeeds: { $exists: true, $not: { $size: 0 } } }).toArray();
 
+  // Get all unique RSS URLs from all chats
+  const uniqueUrls = [...new Set(chats.flatMap(chat => chat.rssFeeds))];
+
+  // Cache for storing fetched RSS data
+  const feedCache = new Map();
+
+  // Fetch all unique feeds first
+  for (const url of uniqueUrls) {
+    try {
+      const items = await fetchRss(url);
+      feedCache.set(url, items);
+      console.log(`Fetched ${items.length} items from ${url}`);
+    } catch (err) {
+      console.error(`Failed to fetch ${url}:`, err.message);
+      feedCache.set(url, []); // Store empty array on failure
+    }
+  }
+
+  // Process each chat using cached data
   for (const { chatId, topicId, rssFeeds } of chats) {
     for (const rssUrl of rssFeeds) {
-      try {
-        const items = await fetchRss(rssUrl);
-        if (!items.length) continue;
+      const cachedItems = feedCache.get(rssUrl);
+      if (!cachedItems || cachedItems.length === 0) continue;
 
+      try {
         const lastLog = await getLastLog(chatId, rssUrl);
         const existingLinks = lastLog?.lastItems?.map(item => item.link) || [];
         const newItems = [];
-        for (const item of items) {
+
+        for (const item of cachedItems) {
           if (existingLinks.includes(item.link)) break;
           newItems.push(item);
         }
@@ -428,8 +444,7 @@ const sendRssUpdates = async () => {
           }
 
           const message = `<b>${escapeHTML(item.title)}</b>\n\n` +
-            `<a href="${escapeHTML(item.link)}">Source</a> | ` +
-            `<a href="https://burhanverse.t.me"><i>Prjkt:Sid.</i></a>`;
+            `<a href="${escapeHTML(item.link)}"><i>Source</i></a>`;
 
           try {
             await bot.api.sendMessage(chatId, message, {
@@ -439,8 +454,7 @@ const sendRssUpdates = async () => {
 
             await updateLastLog(chatId, rssUrl, [item]);
             console.log(`Sent content in chat ${chatId} for ${rssUrl}`);
-            await delay(1000);
-
+            await delay(1000); // Maintain rate limiting
           } catch (error) {
             if (error.on?.payload?.chat_id) {
               console.error(`Failed to send to chat ${error.on.payload.chat_id}`);
@@ -451,7 +465,6 @@ const sendRssUpdates = async () => {
             console.error('Send message error:', error.message);
           }
         }
-
       } catch (err) {
         console.error(`Error processing ${rssUrl}:`, err.message);
       }
