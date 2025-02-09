@@ -412,7 +412,7 @@ const sendRssUpdates = async () => {
         }
 
         if (newItems.length === 0) {
-          console.log(`No new items for ${rssUrl} in chat ${chatId}`);
+          console.log(`No new items in chat ${chatId} for ${rssUrl}`);
           continue;
         }
 
@@ -438,7 +438,7 @@ const sendRssUpdates = async () => {
             });
 
             await updateLastLog(chatId, rssUrl, [item]);
-            console.log(`Sent message for ${rssUrl} in chat ${chatId}`);
+            console.log(`Sent content in chat ${chatId} for ${rssUrl}`);
             await delay(1000);
 
           } catch (error) {
