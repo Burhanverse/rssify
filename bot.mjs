@@ -363,13 +363,13 @@ bot.command('about', spamProtection, async (ctx) => {
   const { version, apivar, description, author, homepage, issues, license, copyright } = getBotDetails();
   const message =
     `<b>About Bot:</b> <i>${escapeHTML(description)}</i>\n\n` +
-    `<b>Client Version:</b> <i>${escapeHTML(version)}</i>\n` +
-    `<b>Parser API:</b> <i>${escapeHTML(apivar)}</i>\n` +
-    `<b>Author:</b> <i>${escapeHTML(author)}</i>\n` +
-    `<b>Issues:</b> <i><a href="${escapeHTML(issues)}">Report Now!</a></i>\n` +
-    `<b>Project Page:</b> <i><a href="${escapeHTML(homepage)}">Check NOw!</a></i>\n` +
-    `<b>License:</b> <i>${escapeHTML(license)}</i>\n` +
-    `<b>Copyright:</b> <i>${escapeHTML(copyright)}</i>`;
+    `⋗ <b>Client Version:</b> <i>${escapeHTML(version)}</i>\n` +
+    `⋗ <b>Parser API:</b> <i>${escapeHTML(apivar)}</i>\n` +
+    `⋗ <b>Author:</b> <i>${escapeHTML(author)}</i>\n` +
+    `⋗ <b>Issues:</b> <i><a href="${escapeHTML(issues)}">Report Now!</a></i>\n` +
+    `⋗ <b>Project Page:</b> <i><a href="${escapeHTML(homepage)}">Check NOw!</a></i>\n` +
+    `⋗ <b>License:</b> <i>${escapeHTML(license)}</i>\n` +
+    `⋗ <b>Copyright:</b> <i>${escapeHTML(copyright)}</i>`;
 
   await ctx.reply(message, {
     parse_mode: 'HTML',
