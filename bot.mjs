@@ -69,7 +69,7 @@ const updateLastLog = async (chatId, rssUrl, items) => {
         lastItems: {
           $each: uniqueItems,
           $sort: { timestamp: -1 },
-          $slice: 5
+          $slice: 50
         }
       }
     },
