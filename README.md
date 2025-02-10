@@ -4,9 +4,11 @@ cd rssify
 ```
 
 ```
-npm start
+bash start.sh -c #clean run with git pull
 ```
 
 ```
-npm run rssify
+bash start.sh -d #dirty run with git pull
 ```
+```
+bash  start.sh #starts rssify directly

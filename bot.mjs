@@ -416,12 +416,10 @@ const fetchRss = async (rssUrl) => {
 
 // Send RSS updates
 const sendRssUpdates = async () => {
-  // Fetch all chats that have at least one rssFeed.
   const chats = await chatCollection.find({ rssFeeds: { $exists: true, $not: { $size: 0 } } }).toArray();
   const uniqueUrls = [...new Set(chats.flatMap(chat => chat.rssFeeds))];
   const feedCache = new Map();
 
-  // Fetch and cache items for each unique feed URL.
   for (const url of uniqueUrls) {
     try {
       const items = await fetchRss(url);
@@ -429,19 +427,16 @@ const sendRssUpdates = async () => {
       console.log(`Fetched ${items.length} items from ${url}`);
     } catch (err) {
       console.error(`Failed to fetch ${url}:`, err.message);
-      feedCache.set(url, []); // Store an empty array on failure.
+      feedCache.set(url, []);
     }
   }
 
-  // Process each chat's feeds.
   for (const { chatId, topicId, rssFeeds } of chats) {
-    // Before processing, re-fetch the chat's subscription data to verify the current list.
     const chatSubscription = await chatCollection.findOne({ chatId });
     if (!chatSubscription || !Array.isArray(chatSubscription.rssFeeds)) {
       continue;
     }
 
-    // Process each feed the chat was originally subscribed to.
     for (const rssUrl of rssFeeds) {
       // Double-check that the chat is still subscribed to this feed.
       if (!chatSubscription.rssFeeds.includes(rssUrl)) {
@@ -457,7 +452,6 @@ const sendRssUpdates = async () => {
         const existingLinks = lastLog?.lastItems?.map(item => item.link) || [];
         const newItems = [];
 
-        // Create a list of new items (stop at the first duplicate).
         for (const item of cachedItems) {
           if (existingLinks.includes(item.link)) break;
           newItems.push(item);
@@ -496,7 +490,7 @@ const sendRssUpdates = async () => {
 
             await updateLastLog(chatId, rssUrl, [item]);
             console.log(`Sent content in chat ${chatId} for ${rssUrl}`);
-            await delay(1000); // Maintain rate limiting.
+            await delay(1000); // 1sec delay.
           } catch (error) {
             if (error.on?.payload?.chat_id) {
               console.error(`Failed to send to chat ${error.on.payload.chat_id}`);
