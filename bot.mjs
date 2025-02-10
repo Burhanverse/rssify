@@ -416,10 +416,12 @@ const fetchRss = async (rssUrl) => {
 
 // Send RSS updates
 const sendRssUpdates = async () => {
+  // Fetch all chats that have at least one rssFeed.
   const chats = await chatCollection.find({ rssFeeds: { $exists: true, $not: { $size: 0 } } }).toArray();
   const uniqueUrls = [...new Set(chats.flatMap(chat => chat.rssFeeds))];
   const feedCache = new Map();
 
+  // Fetch and cache items for each unique feed URL.
   for (const url of uniqueUrls) {
     try {
       const items = await fetchRss(url);
@@ -427,12 +429,26 @@ const sendRssUpdates = async () => {
       console.log(`Fetched ${items.length} items from ${url}`);
     } catch (err) {
       console.error(`Failed to fetch ${url}:`, err.message);
-      feedCache.set(url, []); // Store empty array on failure
+      feedCache.set(url, []); // Store an empty array on failure.
     }
   }
 
+  // Process each chat's feeds.
   for (const { chatId, topicId, rssFeeds } of chats) {
+    // Before processing, re-fetch the chat's subscription data to verify the current list.
+    const chatSubscription = await chatCollection.findOne({ chatId });
+    if (!chatSubscription || !Array.isArray(chatSubscription.rssFeeds)) {
+      continue;
+    }
+
+    // Process each feed the chat was originally subscribed to.
     for (const rssUrl of rssFeeds) {
+      // Double-check that the chat is still subscribed to this feed.
+      if (!chatSubscription.rssFeeds.includes(rssUrl)) {
+        console.log(`Chat ${chatId} is no longer subscribed to ${rssUrl}. Skipping.`);
+        continue;
+      }
+
       const cachedItems = feedCache.get(rssUrl);
       if (!cachedItems || cachedItems.length === 0) continue;
 
@@ -441,6 +457,7 @@ const sendRssUpdates = async () => {
         const existingLinks = lastLog?.lastItems?.map(item => item.link) || [];
         const newItems = [];
 
+        // Create a list of new items (stop at the first duplicate).
         for (const item of cachedItems) {
           if (existingLinks.includes(item.link)) break;
           newItems.push(item);
@@ -454,6 +471,12 @@ const sendRssUpdates = async () => {
         const itemsToSend = [...newItems].reverse();
 
         for (const item of itemsToSend) {
+          const currentChat = await chatCollection.findOne({ chatId });
+          if (!currentChat?.rssFeeds.includes(rssUrl)) {
+            console.log(`Chat ${chatId} unsubscribed from ${rssUrl} during sending. Skipping further items.`);
+            break;
+          }
+
           const currentLog = await getLastLog(chatId, rssUrl);
           const currentLinks = currentLog?.lastItems?.map(item => item.link) || [];
 
@@ -473,7 +496,7 @@ const sendRssUpdates = async () => {
 
             await updateLastLog(chatId, rssUrl, [item]);
             console.log(`Sent content in chat ${chatId} for ${rssUrl}`);
-            await delay(1000); // Maintain rate limiting
+            await delay(1000); // Maintain rate limiting.
           } catch (error) {
             if (error.on?.payload?.chat_id) {
               console.error(`Failed to send to chat ${error.on.payload.chat_id}`);
@@ -485,7 +508,7 @@ const sendRssUpdates = async () => {
           }
         }
       } catch (err) {
-        console.error(`Error processing ${rssUrl}:`, err.message);
+        console.error(`Error processing ${rssUrl} for chat ${chatId}:`, err.message);
       }
     }
   }
