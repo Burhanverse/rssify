@@ -12,14 +12,14 @@
     "pretty-bytes": "^6.1.1"
   },
   "name": "rssify",
-  "version": "3.8.0",
+  "version": "3.8.4",
   "apivar": "3.4",
   "description": "RSS-ify brings you the latest updates from your favorite feeds right into Telegram, hassle-free!",
   "main": "bot.mjs",
   "scripts": {
-    "start": "npm install concurrently && pip install -r api/feedparser/requirements.txt && npm install && npm run rssify",
+    "start": "npm install concurrently && pip install -r api/parserapi/requirements.txt && npm install && npm run rssify",
     "rssify": "concurrently \"npm:api\" \"npm:bot\"",
-    "api": "python3 api/feedparser/api.py",
+    "api": "python3 api/parserapi/api.py",
     "bot": "node bot.mjs"
   },
   "repository": {
