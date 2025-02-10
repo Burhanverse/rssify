@@ -20,7 +20,7 @@ const DATABASE_NAME = process.env.DB_NAME || 'rssify';
 const bot = new Bot(BOT_TOKEN);
 const client = new MongoClient(MONGO_URI);
 
-// MongoDB connection and collections
+// MongoDB
 let db, chatCollection, logCollection, spamCollection;
 
 const initDatabase = async () => {
@@ -77,7 +77,7 @@ const updateLastLog = async (chatId, rssUrl, items) => {
   );
 };
 
-// Store the bot start time
+// Bot start time
 const botStartTime = Date.now();
 
 function formatUptime(ms) {
@@ -92,7 +92,7 @@ function formatUptime(ms) {
     : `${hours}h ${minutes}m ${secs}s`;
 }
 
-// Escape HTML helper function
+// Escape HTML helper
 const escapeHTML = (text) => {
   return text.replace(/[&<>"'’]/g, (char) => {
     switch (char) {
@@ -114,10 +114,11 @@ const spamProtection = async (ctx, next) => {
     const command = ctx.message.text.split(' ')[0];
     const now = new Date();
 
-    // Retrieve spam data
     const user = await spamCollection.findOne({ userId });
     if (user?.blockUntil && new Date(user.blockUntil) > now) {
-      return ctx.reply('𝘠𝘰𝘶 𝘢𝘳𝘦 𝘣𝘭𝘰𝘤𝘬𝘦𝘥 𝘧𝘰𝘳 𝘴𝘱𝘢𝘮𝘮𝘪𝘯𝘨. 𝘞𝘢𝘪𝘵 𝘶𝘯𝘵𝘪𝘭 𝘵𝘩𝘦 𝘤𝘰𝘰𝘭𝘥𝘰𝘸𝘯 𝘦𝘹𝘱𝘪𝘳𝘦𝘴.');
+      return ctx.reply('<i>You are blocked due to excessive bot command usage. Wait until the cooldown expires</i>',
+        { parse_mode: 'HTML' }
+      );
     }
 
     const recentCommands = (user?.commands || []).filter(cmd =>
@@ -127,19 +128,22 @@ const spamProtection = async (ctx, next) => {
     if (recentCommands.length >= 4) {
       const warnings = (user?.warnings || 0) + 1;
 
-      if (warnings >= 3) {
+      if (warnings >= 4) {
         await spamCollection.updateOne({ userId }, {
-          $set: { blockUntil: new Date(now.getTime() + 12 * 60 * 60 * 1000) },
+          $set: { blockUntil: new Date(now.getTime() + 60 * 60 * 1000) }, // 1 hour cooldown
           $unset: { commands: '' }
         });
-        return ctx.reply('𝘠𝘰𝘶 𝘢𝘳𝘦 𝘣𝘭𝘰𝘤𝘬𝘦𝘥 𝘧𝘰𝘳 12 𝘩𝘰𝘶𝘳𝘴 𝘧𝘰𝘳 𝘳𝘦𝘱𝘦𝘢𝘵𝘦𝘥 𝘴𝘱𝘢𝘮𝘮𝘪𝘯𝘨.');
+        return ctx.reply('<i>YOU are blocked for 1 hour due to repeated spamming</i>',
+          { parse_mode: 'HTML' }
+        );
       } else {
         await spamCollection.updateOne({ userId }, { $set: { warnings }, $push: { commands: { command, timestamp: now } } });
-        return ctx.reply(`𝘚𝘵𝘰𝘱 𝘴𝘱𝘢𝘮𝘮𝘪𝘯𝘨. 𝘞𝘢𝘳𝘯𝘪𝘯𝘨 ${warnings}/3.`);
+        return ctx.reply(`<i>Stop spamming. Warning ${warnings}/3.</i>`,
+          { parse_mode: 'HTML' }
+        );
       }
     }
 
-    // Allow to proceed
     await spamCollection.updateOne(
       { userId },
       { $push: { commands: { command, timestamp: now } }, $setOnInsert: { warnings: 0 } },
@@ -152,9 +156,9 @@ const spamProtection = async (ctx, next) => {
   }
 };
 
-// Middleware isAdmin check
+
+// isAdmin Middleware
 const isAdmin = async (ctx, next) => {
-  // If the chat is private, allow the command to proceed
   if (ctx.chat.type === 'private') {
     return next();
   }
@@ -164,11 +168,15 @@ const isAdmin = async (ctx, next) => {
     if (['administrator', 'creator'].includes(chatMember.status)) {
       return next();
     } else {
-      return ctx.reply('𝘠𝘰𝘶 𝘮𝘶𝘴𝘵 𝘣𝘦 𝘢𝘯 𝘢𝘥𝘮𝘪𝘯 𝘵𝘰 𝘶𝘴𝘦 𝘵𝘩𝘪𝘴 𝘤𝘰𝘮𝘮𝘢𝘯𝘥.');
+      return ctx.reply('<i>You must be an admin to use this command.</i>',
+        { parse_mode: 'HTML' }
+      );
     }
   } catch (err) {
     console.error('Error in isAdmin middleware:', err);
-    return ctx.reply('𝘜𝘯𝘢𝘣𝘭𝘦 𝘵𝘰 𝘷𝘦𝘳𝘪𝘧𝘺 𝘺𝘰𝘶𝘳 𝘢𝘤𝘤𝘦𝘴𝘴 𝘳𝘪𝘨𝘩𝘵𝘴. 𝘗𝘭𝘦𝘢𝘴𝘦 𝘵𝘳𝘺 𝘢𝘨𝘢𝘪𝘯.');
+    return ctx.reply('<i>Unable to verify your access rights.</i>',
+      { parse_mode: 'HTML' }
+    );
   }
 };
 
@@ -199,7 +207,8 @@ const getBotDetails = () => {
 bot.command('start', spamProtection, isAdmin, (ctx) => {
   ctx.reply(
     '🤖 <i>RSS-ify brings you the latest updates from your favorite feeds right into Telegram, hassle-free!</i>\n\n' +
-    '<b>Homepage:</b> <a href="burhanverse.eu.org/blog/rssify"><i>visit now!</i></a>\n\n' +
+    'ℹ️ <i>Visit project homepage for more details.</i>\n' +
+    '🌐 <b>Homepage:</b> <a href="burhanverse.eu.org/blog/rssify"><i>visit now!</i></a>\n\n' +
     '<a href="burhanverse.t.me"><i>Prjkt:Sid.</i></a>',
     {
       parse_mode: 'HTML',
@@ -212,14 +221,14 @@ bot.command('start', spamProtection, isAdmin, (ctx) => {
 bot.command('add', spamProtection, isAdmin, async (ctx) => {
   const rssUrl = ctx.message.text.split(' ')[1];
   if (!rssUrl) {
-    return ctx.reply('Usage: /add 𝘳𝘴𝘴_𝘶𝘳𝘭', { parse_mode: 'HTML' });
+    return ctx.reply('Usage: /add <code>source_url</code>', { parse_mode: 'HTML' });
   }
 
   const chatId = ctx.chat.id.toString();
   try {
     const chat = await chatCollection.findOne({ chatId });
     if (chat?.rssFeeds?.includes(rssUrl)) {
-      return ctx.reply(`𝘍𝘦𝘦𝘥 𝘢𝘭𝘳𝘦𝘢𝘥𝘺 𝘦𝘹𝘪𝘴𝘵𝘴`, {
+      return ctx.reply(`<i>Feed already exists</i>`, {
         parse_mode: 'HTML',
       });
     }
@@ -228,7 +237,7 @@ bot.command('add', spamProtection, isAdmin, async (ctx) => {
     if (items.length === 0) throw new Error('𝘌𝘮𝘱𝘵𝘺 𝘧𝘦𝘦𝘥.');
 
     await chatCollection.updateOne({ chatId }, { $addToSet: { rssFeeds: rssUrl } }, { upsert: true });
-    ctx.reply(`𝘍𝘦𝘦𝘥 𝘢𝘥𝘥𝘦𝘥: ${escapeHTML(rssUrl)}`, {
+    ctx.reply(`<i>Feed added</i>: ${escapeHTML(rssUrl)}`, {
       parse_mode: 'HTML',
       disable_web_page_preview: true,
     });
@@ -245,7 +254,7 @@ bot.command('add', spamProtection, isAdmin, async (ctx) => {
     console.log(`Chat ${chatId} added a new feed URL: ${rssUrl}`);
 
   } catch (err) {
-    ctx.reply(`𝘍𝘢𝘪𝘭𝘦𝘥 𝘵𝘰 𝘢𝘥𝘥 𝘧𝘦𝘦𝘥: ${escapeHTML(err.message)}`, {
+    ctx.reply(`<i>Failed to add feed</i>: ${escapeHTML(err.message)}`, {
       parse_mode: 'HTML',
       disable_web_page_preview: true,
     });
@@ -256,14 +265,14 @@ bot.command('add', spamProtection, isAdmin, async (ctx) => {
 bot.command('del', spamProtection, isAdmin, async (ctx) => {
   const rssUrl = ctx.message.text.split(' ')[1];
   if (!rssUrl) {
-    return ctx.reply('Usage: /del 𝘳𝘴𝘴_𝘶𝘳𝘭', { parse_mode: 'HTML' });
+    return ctx.reply('Usage: /del <code>source_url</code>', { parse_mode: 'HTML' });
   }
 
   const chatId = ctx.chat.id.toString();
   await chatCollection.updateOne({ chatId }, { $pull: { rssFeeds: rssUrl } });
   await logCollection.deleteOne({ chatId, rssUrl });
 
-  ctx.reply(`𝘍𝘦𝘦𝘥 𝘳𝘦𝘮𝘰𝘷𝘦𝘥: <a href="${escapeHTML(rssUrl)}">${escapeHTML(rssUrl)}</a>`, {
+  ctx.reply(`<i>Feed removed</i>: <a href="${escapeHTML(rssUrl)}">${escapeHTML(rssUrl)}</a>`, {
     parse_mode: 'HTML',
     disable_web_page_preview: true,
   });
@@ -275,8 +284,8 @@ bot.command('list', spamProtection, isAdmin, async (ctx) => {
   const chat = await chatCollection.findOne({ chatId });
 
   if (!chat?.rssFeeds?.length) {
-    return ctx.reply('𝘕𝘰 𝘍𝘦𝘦𝘥𝘴 𝘢𝘥𝘥𝘦𝘥.', {
-      parse_mode: 'Markdown',
+    return ctx.reply("<i>You haven't Subscribed to a feed yet.</i>", {
+      parse_mode: 'HTML',
       disable_web_page_preview: true,
     });
   }
@@ -294,11 +303,13 @@ bot.command('set', spamProtection, isAdmin, async (ctx) => {
   const topicId = ctx.message.message_thread_id;
 
   if (!topicId) {
-    return ctx.reply('𝘛𝘩𝘪𝘴 𝘤𝘰𝘮𝘮𝘢𝘯𝘥 𝘤𝘢𝘯 𝘰𝘯𝘭𝘺 𝘣𝘦 𝘶𝘴𝘦𝘥 𝘪𝘯 𝘢 𝘵𝘰𝘱𝘪𝘤.', { parse_mode: 'HTML' });
+    return ctx.reply('<i>This command can only be used in a topic.</i>', { parse_mode: 'HTML' });
   }
 
   await chatCollection.updateOne({ chatId }, { $set: { topicId } }, { upsert: true });
-  ctx.reply(`𝘙𝘚𝘚 𝘶𝘱𝘥𝘢𝘵𝘦𝘴 𝘸𝘪𝘭𝘭 𝘯𝘰𝘸 𝘣𝘦 𝘴𝘦𝘯𝘵 𝘵𝘰 𝘵𝘩𝘪𝘴 𝘵𝘰𝘱𝘪𝘤 (𝘐𝘋: ${topicId}).`);
+  ctx.reply(`<i>Feed updates will now be sent to this topic</i> (𝘐𝘋: ${topicId}).`,
+    { parse_mode: 'HTML' }
+  );
 });
 
 // Send command (owner only)
@@ -307,12 +318,16 @@ bot.command('send', async (ctx) => {
   const authorizedUser = process.env.OWNER_ID;
 
   if (chatId !== authorizedUser) {
-    return ctx.reply('𝘙𝘦𝘴𝘦𝘳𝘷𝘦𝘥 𝘧𝘰𝘳 𝘰𝘸𝘯𝘦𝘳 𝘶𝘴𝘦 𝘰𝘯𝘭𝘺.');
+    return ctx.reply('<i>Reserved for owner only</i>',
+      { parse_mode: 'HTML' }
+    );
   }
 
   const originalMessage = ctx.message.reply_to_message;
   if (!originalMessage) {
-    return ctx.reply('𝘗𝘭𝘦𝘢𝘴𝘦 𝘳𝘦𝘱𝘭𝘺 𝘵𝘰 𝘵𝘩𝘦 𝘮𝘦𝘴𝘴𝘢𝘨𝘦 𝘺𝘰𝘶 𝘸𝘢𝘯𝘵 𝘵𝘰 𝘧𝘰𝘳𝘸𝘢𝘳𝘥.');
+    return ctx.reply('<i>Please reply to a message you want to forward.</i>',
+      { parse_mode: 'HTML' }
+    );
   }
 
   const subscribers = await chatCollection.find().toArray();
@@ -320,12 +335,20 @@ bot.command('send', async (ctx) => {
   for (const subscriber of subscribers) {
     try {
       await bot.api.forwardMessage(subscriber.chatId, chatId, originalMessage.message_id);
-    } catch (err) {
-      console.error(`Failed to send message to ${subscriber.chatId}:`, err);
+    } catch (error) {
+      if (error.on?.payload?.chat_id) {
+        console.error(`Failed to send to chat ${error.on.payload.chat_id}`);
+        await chatCollection.deleteOne({ chatId });
+        console.log(`Deleted chat ${chatId} from database`);
+        break;
+      }
+      console.error('Send message error:', error.message);
     }
   }
 
-  ctx.reply('𝘔𝘦𝘴𝘴𝘢𝘨𝘦 𝘧𝘰𝘳𝘸𝘢𝘳𝘥𝘦𝘥 𝘴𝘶𝘤𝘤𝘦𝘴𝘧𝘶𝘭𝘭𝘺.');
+  ctx.reply('<i>Message forwarded successfully.</i>',
+    { parse_mode: 'HTML' }
+  );
 });
 
 // /stats command implementation ( works only on ptrodactyl eggs )
@@ -354,7 +377,9 @@ bot.command('stats', spamProtection, async (ctx) => {
 
   } catch (err) {
     console.error('Error in /stats command:', err);
-    await ctx.reply('𝘈𝘯 𝘦𝘳𝘳𝘰𝘳 𝘰𝘤𝘤𝘶𝘳𝘳𝘦𝘥 𝘸𝘩𝘪𝘭𝘦 𝘧𝘦𝘵𝘤𝘩𝘪𝘯𝘨 𝘴𝘵𝘢𝘵𝘴. 𝘗𝘭𝘦𝘢𝘴𝘦 𝘵𝘳𝘺 𝘢𝘨𝘢𝘪𝘯 𝘭𝘢𝘵𝘦𝘳.');
+    await ctx.reply('<i>An error occurred while fetching server stats. Please try again later.</i>',
+      { parse_mode: 'HTML' }
+    );
   }
 });
 
@@ -377,7 +402,7 @@ bot.command('about', spamProtection, async (ctx) => {
   });
 });
 
-// Fetch RSS feeds from ParserAPI
+// Fetch RSS feeds using ParserAPI
 const fetchRss = async (rssUrl) => {
   try {
     const response = await axios.get('http://127.0.0.1:5000/parse', {
@@ -389,17 +414,12 @@ const fetchRss = async (rssUrl) => {
   }
 };
 
-// Send RSS updates to Telegram
+// Send RSS updates
 const sendRssUpdates = async () => {
   const chats = await chatCollection.find({ rssFeeds: { $exists: true, $not: { $size: 0 } } }).toArray();
-
-  // Get all unique RSS URLs from all chats
   const uniqueUrls = [...new Set(chats.flatMap(chat => chat.rssFeeds))];
-
-  // Cache for storing fetched RSS data
   const feedCache = new Map();
 
-  // Fetch all unique feeds first
   for (const url of uniqueUrls) {
     try {
       const items = await fetchRss(url);
@@ -411,7 +431,6 @@ const sendRssUpdates = async () => {
     }
   }
 
-  // Process each chat using cached data
   for (const { chatId, topicId, rssFeeds } of chats) {
     for (const rssUrl of rssFeeds) {
       const cachedItems = feedCache.get(rssUrl);
