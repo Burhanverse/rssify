@@ -1,4 +1,4 @@
-// ompl.mjs - Extension Module for OMPL Import/Export
+// opml.mjs - Extension Module for OPML Import/Export
 import { InputFile } from 'grammy';
 import xml2js from 'xml2js';
 import fs from 'fs';
@@ -28,7 +28,7 @@ const escapeXML = (str) => {
     });
 };
 
-// Generate OMPL content from Feed list
+// Generate OPML content from Feed list
 const generateOpml = (urls, options = {}) => {
     const {
         name = "rssify",
@@ -57,7 +57,7 @@ const generateOpml = (urls, options = {}) => {
 };
 
 
-//  OMPL Parser
+//  OPML Parser
 const parseOpml = async (content) => {
     try {
         const parser = new xml2js.Parser();
@@ -112,7 +112,7 @@ export const handleImport = async (ctx) => {
     const repliedMessage = ctx.message.reply_to_message;
 
     if (!repliedMessage?.document) {
-        return ctx.reply("<i>Reply to an OMPL file with /import</i>", { parse_mode: 'HTML' });
+        return ctx.reply("<i>Reply to an OPML file with /import</i>", { parse_mode: 'HTML' });
     }
 
     try {
@@ -168,6 +168,6 @@ export const handleImport = async (ctx) => {
         });
     } catch (err) {
         console.error('Import error:', err);
-        ctx.reply("<i>Invalid OMPL file format</i>", { parse_mode: 'HTML' });
+        ctx.reply("<i>Invalid OPML file format</i>", { parse_mode: 'HTML' });
     }
 };

@@ -5,8 +5,8 @@ import axios from 'axios';
 import { exec } from 'node:child_process';
 import { promisify } from 'node:util';
 import prettyBytes from 'pretty-bytes';
-import { handleExport, handleImport } from './ext/ompl.mjs';
-import { connectDB, db, chatCollection, logCollection, spamCollection } from './ext/db.mjs';
+import { handleExport, handleImport } from './ext/opml.mjs';
+import { connectDB, chatCollection, logCollection, spamCollection } from './ext/db.mjs';
 import dotenv from 'dotenv';
 
 dotenv.config();
