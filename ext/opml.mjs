@@ -156,7 +156,7 @@ export const handleImport = async (ctx) => {
         let message =
             `<b>Imported ${added} feed</b>\n\n` +
             `<i>Reply with /list to view your subscriptions</i>\n` +
-            `<i> Updates for the new feed will be sent in a few minutes.</i>\n\n` +
+            `<i>Updates for the new feeds will be sent in a few minutes.</i>\n\n` +
             `<a href="burhanverse.t.me"><i>Prjkt:Sid.</i></a>`;
         if (errors.length) {
             message += `\n\nErrors (${errors.length}):\n${errors.slice(0, 3).join('\n')}`;
