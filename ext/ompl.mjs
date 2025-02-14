@@ -29,15 +29,33 @@ const escapeXML = (str) => {
 };
 
 // Generate OMPL content from Feed list
-const generateOpml = (urls) => `<?xml version="1.0" encoding="UTF-8"?>
-<opml version="1.0">
+const generateOpml = (urls, options = {}) => {
+    const {
+        name = "rssify",
+        id = "https://github.com/Burhanverse/rssify",
+        date = new Date()
+    } = options;
+
+    const formatDateRFC822 = (date) => {
+        return date.toUTCString();
+    };
+
+    return `<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0">
   <head>
-    <title>rssify export</title>
+    <title>${escapeXML(options.title || "rssify subscriptions")}</title>
+    <ownerName>${escapeXML(name)}</ownerName>
+    <ownerId>${escapeXML(id)}</ownerId>
+    <dateCreated>
+      ${formatDateRFC822(date)}
+    </dateCreated>
   </head>
   <body>
     ${urls.map(url => `<outline type="rss" xmlUrl="${escapeXML(url)}" />`).join('\n    ')}
   </body>
 </opml>`;
+};
+
 
 //  OMPL Parser
 const parseOpml = async (content) => {
@@ -73,12 +91,12 @@ export const handleExport = async (ctx) => {
         }
 
         const opmlContent = generateOpml(chat.rssFeeds);
-        const fileName = `rss_export_${Date.now()}.opml`;
+        const fileName = `rssify_export_${Date.now()}.opml`;
         const filePath = path.join(__dirname, fileName);
 
         fs.writeFileSync(filePath, opmlContent);
         await ctx.replyWithDocument(new InputFile(filePath, fileName), {
-            caption: '<i>Feeds subscription export</i> 📥\nReply to OMPL file with /import to restore',
+            caption: '📥 <i>Feeds exported successfully!</i>',
             parse_mode: 'HTML'
         });
         fs.unlinkSync(filePath);
@@ -105,7 +123,7 @@ export const handleImport = async (ctx) => {
         const urls = await parseOpml(response.data);
 
         if (!urls.length) {
-            return ctx.reply("<i>No valid RSS feeds found in file</i>", { parse_mode: 'HTML' });
+            return ctx.reply("<i>No valid feeds found in file</i>", { parse_mode: 'HTML' });
         }
 
         let added = 0;
@@ -131,7 +149,10 @@ export const handleImport = async (ctx) => {
             }
         }
 
-        let message = `<i>Imported ${added} feeds</i>`;
+        let message =
+            `<b>Imported ${added} feed :</b>\n\n${urls.slice(0, 3).join('\n\n')}\n\n` +
+            `<i> Updates for the new feed will be sent in a few minutes.</i>\n\n` +
+            `<a href="burhanverse.t.me"><i>Prjkt:Sid.</i></a>`;
         if (errors.length) {
             message += `\n\nErrors (${errors.length}):\n${errors.slice(0, 3).join('\n')}`;
         }
