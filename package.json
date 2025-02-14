@@ -1,6 +1,7 @@
 {
   "type": "module",
   "dependencies": {
+    "@types/xml2js": "^0.4.14",
     "axios": "^1.7.7",
     "concurrently": "^9.1.2",
     "dotenv": "^16.4.5",
@@ -9,10 +10,11 @@
     "markdown-escape": "^2.0.0",
     "mongodb": "^6.13.0",
     "p-limit": "^6.2.0",
-    "pretty-bytes": "^6.1.1"
+    "pretty-bytes": "^6.1.1",
+    "xml2js": "^0.6.2"
   },
   "name": "rssify",
-  "version": "3.8.4",
+  "version": "3.9.0",
   "apivar": "3.4",
   "description": "RSS-ify brings you the latest updates from your favorite feeds right into Telegram, hassle-free!",
   "main": "bot.mjs",

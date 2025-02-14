@@ -2,10 +2,11 @@ import { Bot } from 'grammy';
 import fs from 'fs';
 import path from 'path';
 import axios from 'axios';
-import { MongoClient } from 'mongodb';
 import { exec } from 'node:child_process';
 import { promisify } from 'node:util';
 import prettyBytes from 'pretty-bytes';
+import { handleExport, handleImport } from './ext/ompl.mjs';
+import { connectDB, db, chatCollection, logCollection, spamCollection } from './ext/db.mjs';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -13,29 +14,9 @@ dotenv.config();
 const execPromise = promisify(exec);
 
 const BOT_TOKEN = process.env.TOKEN;
-const MONGO_URI = process.env.DB_URI;
-const DATABASE_NAME = process.env.DB_NAME || 'rssify';
 
-// Initialize
+// Initialize bot
 const bot = new Bot(BOT_TOKEN);
-const client = new MongoClient(MONGO_URI);
-
-// MongoDB
-let db, chatCollection, logCollection, spamCollection;
-
-const initDatabase = async () => {
-  try {
-    await client.connect();
-    db = client.db(DATABASE_NAME);
-    chatCollection = db.collection('chats');
-    logCollection = db.collection('logs');
-    spamCollection = db.collection('spam');
-    console.log('Connected to MongoDB');
-  } catch (err) {
-    console.error('Failed to connect to MongoDB:', err.message);
-    process.exit(1);
-  }
-};
 
 // Last log functions
 const getLastLog = async (chatId, rssUrl) => {
@@ -94,9 +75,8 @@ function formatUptime(ms) {
 
 // Escape HTML helper
 const escapeHTML = (text) => {
-  return text.replace(/[&<>"'’]/g, (char) => {
+  return text.replace(/[<>"'’]/g, (char) => {
     switch (char) {
-      case '&': return '&amp;';
       case '<': return '&lt;';
       case '>': return '&gt;';
       case '"': return '&quot;';
@@ -402,6 +382,10 @@ bot.command('about', spamProtection, async (ctx) => {
   });
 });
 
+// ompl import/export command registrations
+bot.command('export', spamProtection, isAdmin, handleExport);
+bot.command('import', spamProtection, isAdmin, handleImport);
+
 // Fetch RSS feeds using ParserAPI
 const fetchRss = async (rssUrl) => {
   try {
@@ -526,7 +510,7 @@ async function startCycle() {
 }
 
 (async () => {
-  await initDatabase();
+  await connectDB();
   startCycle();
   bot.start();
 })();
