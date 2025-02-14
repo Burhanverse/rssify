@@ -149,15 +149,23 @@ export const handleImport = async (ctx) => {
             }
         }
 
+        if (added === 0) {
+            return ctx.reply("<i>Nothing to import</i>", { parse_mode: 'HTML' });
+        }
+
         let message =
-            `<b>Imported ${added} feed :</b>\n\n${urls.slice(0, 3).join('\n\n')}\n\n` +
+            `<b>Imported ${added} feed</b>\n\n` +
+            `<i>Reply with /list to view your subscriptions</i>\n` +
             `<i> Updates for the new feed will be sent in a few minutes.</i>\n\n` +
             `<a href="burhanverse.t.me"><i>Prjkt:Sid.</i></a>`;
         if (errors.length) {
             message += `\n\nErrors (${errors.length}):\n${errors.slice(0, 3).join('\n')}`;
         }
 
-        ctx.reply(message, { parse_mode: 'HTML' });
+        ctx.reply(message, {
+            parse_mode: 'HTML',
+            disable_web_page_preview: true
+        });
     } catch (err) {
         console.error('Import error:', err);
         ctx.reply("<i>Invalid OMPL file format</i>", { parse_mode: 'HTML' });
