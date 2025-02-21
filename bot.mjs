@@ -1,4 +1,4 @@
-import { Bot } from 'grammy';
+import { Bot, InlineKeyboard } from 'grammy';
 import fs from 'fs';
 import path from 'path';
 import axios from 'axios';
@@ -6,6 +6,7 @@ import { exec } from 'node:child_process';
 import { promisify } from 'node:util';
 import prettyBytes from 'pretty-bytes';
 import { handleExport, handleImport } from './ext/opml.mjs';
+import { handleList, handlePagination } from './ext/listHandler.mjs';
 import { connectDB, chatCollection, logCollection, spamCollection } from './ext/db.mjs';
 import dotenv from 'dotenv';
 
@@ -258,24 +259,9 @@ bot.command('del', spamProtection, isAdmin, async (ctx) => {
   });
 });
 
-// List command 
-bot.command('list', spamProtection, isAdmin, async (ctx) => {
-  const chatId = ctx.chat.id.toString();
-  const chat = await chatCollection.findOne({ chatId });
-
-  if (!chat?.rssFeeds?.length) {
-    return ctx.reply("<i>You haven't Subscribed to a feed yet.</i>", {
-      parse_mode: 'HTML',
-      disable_web_page_preview: true,
-    });
-  }
-
-  const feeds = chat.rssFeeds.map((url, i) => `${i + 1}. <a href="${escapeHTML(url)}">${escapeHTML(url)}</a>`).join('\n');
-  ctx.reply(`<b><i>Your Subscribed feeds</i></b>:\n\n${feeds}\n\n<a href="burhanverse.t.me"><i>Prjkt:Sid.</i></a>`, {
-    parse_mode: 'HTML',
-    disable_web_page_preview: true,
-  });
-});
+// Register the '/list' command with middleware.
+bot.command('list', spamProtection, isAdmin, handleList);
+bot.callbackQuery(/^list_(prev|next)_(\d+)$/, spamProtection, isAdmin, handlePagination);
 
 // Set command 
 bot.command('set', spamProtection, isAdmin, async (ctx) => {
