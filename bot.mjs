@@ -1,4 +1,4 @@
-import { Bot, InlineKeyboard } from 'grammy';
+import { Bot } from 'grammy';
 import fs from 'fs';
 import path from 'path';
 import axios from 'axios';
@@ -498,5 +498,7 @@ async function startCycle() {
 (async () => {
   await connectDB();
   startCycle();
-  bot.start();
+  bot.start({
+    drop_pending_updates: true,
+  });
 })();
