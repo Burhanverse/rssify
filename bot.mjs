@@ -137,7 +137,6 @@ const spamProtection = async (ctx, next) => {
   }
 };
 
-
 // isAdmin Middleware
 const isAdmin = async (ctx, next) => {
   if (ctx.chat.type === 'private') {
@@ -198,7 +197,14 @@ bot.command('start', spamProtection, isAdmin, async (ctx) => {
       }
     );
   } catch (error) {
-    console.error('Error sending message:', error);
+    if (error.on?.payload?.chat_id) {
+      const chatId = error.on.payload.chat_id;
+      console.error(`Failed to send to chat ${chatId}`);
+      await chatCollection.deleteOne({ chatId });
+      console.log(`Deleted chat ${chatId} from database`);
+      return;
+    }
+    console.error('Send message error:', error.message);
   }
 });
 
