@@ -71,6 +71,7 @@ const parseOpml = async (content) => {
 };
 
 // Export handler
+// Export handler
 export const handleExport = async (ctx) => {
     const chatId = ctx.chat.id.toString();
     try {
@@ -85,7 +86,7 @@ export const handleExport = async (ctx) => {
 
         fs.writeFileSync(filePath, opmlContent);
         await ctx.replyWithDocument(new InputFile(filePath, fileName), {
-            caption: '📥 <i>Feeds exported successfully!</i>',
+            caption: `📥 <i>${chat.rssFeeds.length} feeds exported successfully!</i>`,
             parse_mode: 'HTML'
         });
         fs.unlinkSync(filePath);

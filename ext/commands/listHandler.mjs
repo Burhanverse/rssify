@@ -16,7 +16,7 @@ export function chunkArray(arr, chunkSize) {
 export function formatPage(feedsChunk, currentPage, totalPages) {
     const feeds = feedsChunk
         .map((url, index) => {
-            const number = currentPage * 25 + index + 1;
+            const number = currentPage * 15 + index + 1;
             let linkTitle;
             try {
                 const parsedUrl = new URL(url);
@@ -60,7 +60,7 @@ export async function handleList(ctx) {
     }
 
     const feeds = chat.rssFeeds;
-    const chunks = chunkArray(feeds, 25);
+    const chunks = chunkArray(feeds, 15);
     const totalPages = chunks.length;
     const currentPage = 0;
 
@@ -87,7 +87,7 @@ export async function handlePagination(ctx) {
     }
 
     const feeds = chat.rssFeeds;
-    const chunks = chunkArray(feeds, 25);
+    const chunks = chunkArray(feeds, 15);
     const totalPages = chunks.length;
 
     // Determine the new page based on the action.
