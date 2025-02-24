@@ -26,7 +26,7 @@ export function formatPage(feedsChunk, currentPage, totalPages) {
             }
             const escapedUrl = escapeHTML(url);
             const escapedTitle = escapeHTML(linkTitle);
-            return `${number}. <b><a href="${escapedUrl}">${escapedTitle}</a></b> - <code>${escapedUrl}</code>`;
+            return `${number}. <b><a href="${escapedUrl}">${escapedTitle}</a></b>\n ╰➤ <code>${escapedUrl}</code>`;
         })
         .join('\n');
 
