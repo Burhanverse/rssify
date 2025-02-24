@@ -1,6 +1,7 @@
 // listHandler.mjs
 import { InlineKeyboard } from 'grammy';
-import { chatCollection } from './db.mjs';
+import { escapeHTML } from '../escapeHelper.mjs';
+import { chatCollection } from '../db.mjs';
 
 // Utility function to split an array into chunks of a given size.
 export function chunkArray(arr, chunkSize) {
@@ -9,19 +10,6 @@ export function chunkArray(arr, chunkSize) {
         chunks.push(arr.slice(i, i + chunkSize));
     }
     return chunks;
-}
-
-// Escape HTML helper
-export function escapeHTML(str) {
-    return str.replace(/[<>"']/g, (match) => {
-        switch (match) {
-            case '<': return '&lt;';
-            case '>': return '&gt;';
-            case '"': return '&quot;';
-            case "'": return '&#39;';
-            default: return match;
-        }
-    });
 }
 
 // Format the current page of feed URLs into a message.

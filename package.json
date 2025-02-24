@@ -14,7 +14,7 @@
     "xml2js": "^0.6.2"
   },
   "name": "rssify",
-  "version": "3.9.3",
+  "version": "3.9.4",
   "apivar": "3.5",
   "description": "RSS-ify brings you the latest updates from your favorite feeds right into Telegram, hassle-free!",
   "main": "bot.mjs",
@@ -34,10 +34,5 @@
   "bugs": {
     "url": "https://github.com/Burhanverse/rssify/issues"
   },
-  "homepage": "https://burhanverse.eu.org/blog/rssify",
-  "devDependencies": {
-    "@eslint/js": "^9.21.0",
-    "eslint": "^9.21.0",
-    "globals": "^16.0.0"
-  }
+  "homepage": "https://burhanverse.eu.org/blog/rssify"
 }

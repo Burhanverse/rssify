@@ -5,7 +5,8 @@ import fs from 'fs';
 import path from 'path';
 import axios from 'axios';
 import { fileURLToPath } from 'url';
-import { chatCollection } from './db.mjs';
+import { chatCollection } from '../db.mjs';
+import { escapeXML } from '../escapeHelper.mjs';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -15,18 +16,6 @@ if (!botToken) throw new Error("TOKEN is not set");
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-const escapeXML = (str) => {
-    return str.replace(/[<>"']/g, (char) => {
-        switch (char) {
-            case '<': return '&lt;';
-            case '>': return '&gt;';
-            case '"': return '&quot;';
-            case "'": return '&apos;';
-            default: return char;
-        }
-    });
-};
 
 // Generate OPML content from Feed list
 const generateOpml = (urls, options = {}) => {
