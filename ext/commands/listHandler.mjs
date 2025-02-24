@@ -17,7 +17,16 @@ export function formatPage(feedsChunk, currentPage, totalPages) {
     const feeds = feedsChunk
         .map((url, index) => {
             const number = currentPage * 25 + index + 1;
-            return `${number}. <a href="${escapeHTML(url)}">${escapeHTML(url)}</a>`;
+            let linkTitle;
+            try {
+                const parsedUrl = new URL(url);
+                linkTitle = parsedUrl.hostname;
+            } catch (error) {
+                linkTitle = url;
+            }
+            const escapedUrl = escapeHTML(url);
+            const escapedTitle = escapeHTML(linkTitle);
+            return `${number}. <b><a href="${escapedUrl}">${escapedTitle}</a></b> - <code>${escapedUrl}</code>`;
         })
         .join('\n');
 

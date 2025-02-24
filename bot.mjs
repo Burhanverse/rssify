@@ -1,17 +1,17 @@
+import dotenv from 'dotenv';
 import { Bot } from 'grammy';
+import { connectDB } from './ext/db.mjs';
+import { startCycle } from "./ext/sendRss.mjs";
 import { addCmd } from './ext/commands/addHandler.mjs';
 import { delCmd } from './ext/commands/delHandler.mjs';
 import { setCmd } from './ext/commands/setHandler.mjs';
-import { connectDB } from './ext/db.mjs';
-import { startCycle } from "./ext/sendRss.mjs";
 import { startCmd } from './ext/commands/startHandler.mjs';
 import { statsCmd } from './ext/commands/statsHandler.mjs';
 import { aboutCmd } from './ext/commands/aboutHandler.mjs';
 import { alertSender } from './ext/commands/alertSender.mjs';
+import { isAdmin, spamProtection } from './ext/middlewares.mjs';
 import { handleExport, handleImport } from './ext/commands/opmlHandler.mjs';
 import { handleList, handlePagination } from './ext/commands/listHandler.mjs';
-import { isAdmin, spamProtection } from './ext/middlewares.mjs';
-import dotenv from 'dotenv';
 
 dotenv.config();
 
@@ -35,8 +35,8 @@ bot.command('import', spamProtection, isAdmin, handleImport);
 
 (async () => {
   await connectDB();
-  await startCycle();
-  await bot.start({
+   startCycle();
+   bot.start({
     drop_pending_updates: true,
   });
 })();
