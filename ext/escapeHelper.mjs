@@ -9,7 +9,7 @@ export function escapeXML(str) {
             default: return char;
         }
     });
-};
+}
 
 // Escape HTML helper
 export function escapeHTML(str) {
