@@ -9,7 +9,7 @@ import { startCmd } from './ext/commands/startHandler.mjs';
 import { statsCmd } from './ext/commands/statsHandler.mjs';
 import { aboutCmd } from './ext/commands/aboutHandler.mjs';
 import { alertSender } from './ext/commands/alertSender.mjs';
-import { isAdmin, spamProtection } from './ext/middlewares.mjs';
+import { isAdmin, spamProtection, handleThreadId } from './ext/middlewares.mjs';
 import { handleExport, handleImport } from './ext/commands/opmlHandler.mjs';
 import { handleList, handlePagination } from './ext/commands/listHandler.mjs';
 
@@ -19,6 +19,8 @@ const BOT_TOKEN = process.env.TOKEN;
 
 // Initialize bot
 const bot = new Bot(BOT_TOKEN);
+
+bot.use(handleThreadId);
 
 // Bot commands
 bot.command('start', spamProtection, isAdmin, startCmd);
@@ -35,8 +37,8 @@ bot.command('import', spamProtection, isAdmin, handleImport);
 
 (async () => {
   await connectDB();
-   startCycle();
-   bot.start({
+  startCycle();
+  bot.start({
     drop_pending_updates: true,
   });
 })();

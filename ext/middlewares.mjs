@@ -1,5 +1,28 @@
 import { spamCollection, logCollection } from './db.mjs';
 
+// Middleware to automatically include message_thread_id if available from message or callbackQuery
+export const handleThreadId = async (ctx, next) => {
+  let threadId;
+  if (ctx.message && ctx.message.message_thread_id) {
+    threadId = parseInt(ctx.message.message_thread_id);
+  } else if (
+    ctx.callbackQuery &&
+    ctx.callbackQuery.message &&
+    ctx.callbackQuery.message.message_thread_id
+  ) {
+    threadId = parseInt(ctx.callbackQuery.message.message_thread_id);
+  }
+
+  if (threadId) {
+    const originalReply = ctx.reply.bind(ctx);
+    ctx.reply = (text, extra = {}) => {
+      extra = { ...extra, message_thread_id: threadId };
+      return originalReply(text, extra);
+    };
+  }
+  return next();
+};
+
 // isAdmin Middleware
 export const isAdmin = async (ctx, next) => {
   if (ctx.chat.type === 'private') {
