@@ -20,6 +20,22 @@ const BOT_TOKEN = process.env.TOKEN;
 // Initialize bot
 const bot = new Bot(BOT_TOKEN);
 
+process.once('SIGINT', () => bot.stop('SIGINT'));
+process.once('SIGTERM', () => bot.stop('SIGTERM'));
+
+await bot.api.setMyCommands([
+  { command: "start", description: "Start the bot.." },
+  { command: "add", description: "Add a new feed.." },
+  { command: "del", description: "Delete a feed.." },
+  { command: "set", description: "Set feed options.." },
+  { command: "list", description: "List all feeds.." },
+  { command: "export", description: "Export feeds to OPML.." },
+  { command: "import", description: "Import feeds from OPML.." },
+  { command: "help", description: "Get some drugs.." },
+  { command: "stats", description: "Show bot server stats.." },
+  { command: "about", description: "Show information about the bot.." },
+]);
+
 bot.use(handleThreadId);
 
 // Bot commands
