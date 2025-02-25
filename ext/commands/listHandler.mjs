@@ -49,6 +49,7 @@ export function buildPaginationKeyboard(currentPage, totalPages) {
 
 // Handler for the '/list' command.
 export async function handleList(ctx) {
+    await ctx.react('🥱');
     const chatId = ctx.chat.id.toString();
     const chat = await chatCollection.findOne({ chatId });
 

@@ -11,6 +11,7 @@ const bot = new Bot(BOT_TOKEN);
 
 export const startCmd = async (ctx) => {
   try {
+    await ctx.react("😍");
     const extraOptions = {
       parse_mode: 'HTML',
       disable_web_page_preview: true,

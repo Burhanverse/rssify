@@ -74,6 +74,7 @@ const parseOpml = async (content) => {
 export const handleExport = async (ctx) => {
     const chatId = ctx.chat.id.toString();
     try {
+        await ctx.react("🗿");
         const chat = await chatCollection.findOne({ chatId });
         if (!chat?.rssFeeds?.length) {
             return ctx.reply("<i>No subscriptions to export</i>", { parse_mode: 'HTML' });
@@ -98,6 +99,7 @@ export const handleExport = async (ctx) => {
 
 // Import handler
 export const handleImport = async (ctx) => {
+    await ctx.react("👨‍💻");
     const chatId = ctx.chat.id.toString();
     const repliedMessage = ctx.message.reply_to_message;
 

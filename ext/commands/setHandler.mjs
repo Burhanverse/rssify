@@ -1,6 +1,7 @@
 import { chatCollection } from '../db.mjs';
 
 export const setCmd = async (ctx) => {
+  await ctx.react('👌');
   const chatId = ctx.chat.id.toString();
   const topicId = ctx.message.message_thread_id;
 

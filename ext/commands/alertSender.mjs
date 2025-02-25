@@ -10,6 +10,7 @@ const BOT_TOKEN = process.env.TOKEN;
 const bot = new Bot(BOT_TOKEN);
 
 export const alertSender = async (ctx) => {
+    await ctx.react('🍾');
     const chatId = ctx.chat.id.toString();
     const authorizedUser = process.env.OWNER_ID;
 
