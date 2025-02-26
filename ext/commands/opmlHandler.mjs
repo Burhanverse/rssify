@@ -85,11 +85,14 @@ export const handleExport = async (ctx) => {
         const filePath = path.join(__dirname, fileName);
 
         fs.writeFileSync(filePath, opmlContent);
-        await ctx.replyWithDocument(new InputFile(filePath, fileName), {
+        const replyOptions = {
             caption: `📥 <i>${chat.rssFeeds.length} feeds exported successfully!</i>`,
-            parse_mode: 'HTML',
-            ...(ctx.message?.message_thread_id && { message_thread_id: ctx.message.message_thread_id })
-        });
+            parse_mode: 'HTML'
+        };
+        if (ctx.message?.message_thread_id) {
+            replyOptions.message_thread_id = ctx.message.message_thread_id;
+        }
+        await ctx.replyWithDocument(new InputFile(filePath, fileName), replyOptions);
         fs.unlinkSync(filePath);
     } catch (err) {
         console.error('Export failed:', err);
