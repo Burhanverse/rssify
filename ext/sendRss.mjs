@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import { fetchRss } from './parserApi.mjs';
 import { chatCollection } from './db.mjs';
 import { escapeHTML } from './escapeHelper.mjs';
+import { isFeedPaused } from './commands/feedHandler.mjs';
 import { updateLastLog, getLastLog, delay } from './middlewares.mjs';
 
 dotenv.config();
@@ -32,6 +33,13 @@ export const sendRssUpdates = async () => {
     for (const { chatId, topicId, rssFeeds } of chats) {
         const chatSubscription = await chatCollection.findOne({ chatId });
         if (!chatSubscription || !Array.isArray(chatSubscription.rssFeeds)) {
+            continue;
+        }
+
+        // Check if feed updates are paused for this chat
+        const paused = await isFeedPaused(chatId);
+        if (paused) {
+            console.log(`Feed updates are paused for chat ${chatId}. Skipping.`);
             continue;
         }
 

@@ -9,9 +9,10 @@ import { startCmd } from './ext/commands/startHandler.mjs';
 import { statsCmd } from './ext/commands/statsHandler.mjs';
 import { aboutCmd } from './ext/commands/aboutHandler.mjs';
 import { alertSender } from './ext/commands/alertSender.mjs';
-import { isAdmin, spamProtection, handleThreadId } from './ext/middlewares.mjs';
+import { pauseCmd, resumeCmd } from './ext/commands/feedHandler.mjs';
 import { handleExport, handleImport } from './ext/commands/opmlHandler.mjs';
 import { handleList, handlePagination } from './ext/commands/listHandler.mjs';
+import { isAdmin, spamProtection, handleThreadId } from './ext/middlewares.mjs';
 
 dotenv.config();
 
@@ -27,8 +28,10 @@ await bot.api.setMyCommands([
   { command: "start", description: "Start the bot.." },
   { command: "add", description: "Add a new feed.." },
   { command: "del", description: "Delete a feed.." },
-  { command: "set", description: "Set feed options.." },
-  { command: "list", description: "List all feeds.." },
+  { command: "list", description: "List of subscribed feeds.." },
+  { command: "set", description: "Set a group topic for feeds.." },
+  { command: "pause", description: "Pause feed updates.." },
+  { command: "resume", description: "Resume feed updates.." },
   { command: "export", description: "Export feeds to OPML.." },
   { command: "import", description: "Import feeds from OPML.." },
   { command: "help", description: "Get some drugs.." },
@@ -38,11 +41,12 @@ await bot.api.setMyCommands([
 
 bot.use(handleThreadId);
 
-// Bot commands
 bot.command('start', spamProtection, isAdmin, startCmd);
 bot.command('add', spamProtection, isAdmin, addCmd);
 bot.command('del', spamProtection, isAdmin, delCmd);
 bot.command('set', spamProtection, isAdmin, setCmd);
+bot.command('pause', spamProtection, isAdmin, pauseCmd);
+bot.command('resume', spamProtection, isAdmin, resumeCmd);
 bot.command('stats', spamProtection, statsCmd);
 bot.command('about', spamProtection, aboutCmd);
 bot.command('list', spamProtection, isAdmin, handleList);

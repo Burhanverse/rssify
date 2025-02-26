@@ -10,7 +10,7 @@ export const setCmd = async (ctx) => {
   }
 
   await chatCollection.updateOne({ chatId }, { $set: { topicId } }, { upsert: true });
-  ctx.reply(`<i>Feed updates will now be sent to this topic</i> (𝘐𝘋: ${topicId}).`,
+  ctx.reply(`<i>Feed updates will now be sent to ID:</i> ${topicId}.`,
     { parse_mode: 'HTML' }
   );
 }
