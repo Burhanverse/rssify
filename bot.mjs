@@ -8,6 +8,7 @@ import { setCmd } from './ext/commands/setHandler.mjs';
 import { startCmd } from './ext/commands/startHandler.mjs';
 import { statsCmd } from './ext/commands/statsHandler.mjs';
 import { aboutCmd } from './ext/commands/aboutHandler.mjs';
+import { checkSubscription } from './ext/isSubscribed.mjs';
 import { alertSender } from './ext/commands/alertSender.mjs';
 import { pauseCmd, resumeCmd } from './ext/commands/feedHandler.mjs';
 import { handleExport, handleImport } from './ext/commands/opmlHandler.mjs';
@@ -40,7 +41,7 @@ await bot.api.setMyCommands([
 ]);
 
 bot.use(handleThreadId);
-
+bot.use((ctx, next) => checkSubscription(ctx, next, bot));
 bot.command('start', spamProtection, isAdmin, startCmd);
 bot.command('add', spamProtection, isAdmin, addCmd);
 bot.command('del', spamProtection, isAdmin, delCmd);
