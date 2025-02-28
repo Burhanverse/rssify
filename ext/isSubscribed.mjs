@@ -24,39 +24,46 @@ const isSubscribed = async (bot, channelId, userId) => {
     }
 };
 
+export const createSubscriptionMiddleware = (bot) => {
+    return async (ctx, next) => {
+        try {
+            const userId = ctx.from.id;
+
+            const notSubscribedChannels = [];
+            for (const channel of requiredChannels) {
+                const subscribed = await isSubscribed(bot, channel.id, userId);
+                if (!subscribed) {
+                    notSubscribedChannels.push(channel);
+                }
+            }
+
+            if (notSubscribedChannels.length === 0) {
+                return next();
+            }
+
+            const keyboard = new InlineKeyboard();
+
+            const channelCount = notSubscribedChannels.length;
+            for (let i = 0; i < channelCount; i++) {
+                const channel = notSubscribedChannels[i];
+                keyboard.url(`Join @${channel.id}`, channel.url);
+                if (i < 2 && i < channelCount - 1) {
+                    keyboard.row();
+                }
+            }
+
+            await ctx.reply("Please join the following channels to continue:", {
+                reply_markup: keyboard
+            });
+
+        } catch (error) {
+            console.error("Error in subscription middleware:", error);
+            await ctx.reply("An error occurred. Please try again later.");
+        }
+    };
+};
+
 export const checkSubscription = async (ctx, next, bot) => {
-    try {
-        const userId = ctx.from.id;
-
-        const notSubscribedChannels = [];
-        for (const channel of requiredChannels) {
-            const subscribed = await isSubscribed(bot, channel.id, userId);
-            if (!subscribed) {
-                notSubscribedChannels.push(channel);
-            }
-        }
-
-        if (notSubscribedChannels.length === 0) {
-            return next();
-        }
-
-        const keyboard = new InlineKeyboard();
-
-        const channelCount = notSubscribedChannels.length;
-        for (let i = 0; i < channelCount; i++) {
-            const channel = notSubscribedChannels[i];
-            keyboard.url(`Join @${channel.id}`, channel.url);
-            if (i < 2 && i < channelCount - 1) {
-                keyboard.row();
-            }
-        }
-
-        await ctx.reply("Please join the following channels to continue:", {
-            reply_markup: keyboard
-        });
-
-    } catch (error) {
-        console.error("Error in subscription middleware:", error);
-        await ctx.reply("An error occurred. Please try again later.");
-    }
+    const middleware = createSubscriptionMiddleware(bot);
+    return middleware(ctx, next);
 };
