@@ -145,7 +145,18 @@ export const handleImport = async (ctx) => {
         }
 
         if (added === 0) {
-            return ctx.reply("<i>Nothing to import</i>", { parse_mode: 'HTML' });
+            try {
+                await ctx.reply("<i>Nothing to import</i>", { parse_mode: 'HTML' });
+            } catch (replyErr) {
+                if (replyErr.description && replyErr.description.includes("message thread not found")) {
+                    await ctx.api.sendMessage(ctx.chat.id, "<i>Nothing to import</i>", {
+                        parse_mode: 'HTML'
+                    });
+                } else {
+                    throw replyErr;
+                }
+            }
+            return;
         }
 
         let message =
@@ -157,12 +168,33 @@ export const handleImport = async (ctx) => {
             message += `\n\nErrors (${errors.length}):\n${errors.slice(0, 3).join('\n')}`;
         }
 
-        ctx.reply(message, {
-            parse_mode: 'HTML',
-            disable_web_page_preview: true
-        });
+        try {
+            await ctx.reply(message, {
+                parse_mode: 'HTML',
+                disable_web_page_preview: true
+            });
+        } catch (replyErr) {
+            if (replyErr.description && replyErr.description.includes("message thread not found")) {
+                await ctx.api.sendMessage(ctx.chat.id, message, {
+                    parse_mode: 'HTML',
+                    disable_web_page_preview: true
+                });
+            } else {
+                throw replyErr;
+            }
+        }
     } catch (err) {
         console.error('Import error:', err);
-        ctx.reply("<i>Invalid OPML file format</i>", { parse_mode: 'HTML' });
+        try {
+            await ctx.reply("<i>Invalid OPML file format</i>", { parse_mode: 'HTML' });
+        } catch (replyErr) {
+            if (replyErr.description && replyErr.description.includes("message thread not found")) {
+                await ctx.api.sendMessage(ctx.chat.id, "<i>Invalid OPML file format</i>", {
+                    parse_mode: 'HTML'
+                });
+            } else {
+                console.error('Reply error:', replyErr);
+            }
+        }
     }
 };
