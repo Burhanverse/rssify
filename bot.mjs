@@ -23,6 +23,8 @@ const BOT_TOKEN = process.env.TOKEN;
 // Initialize bot
 const bot = new Bot(BOT_TOKEN);
 
+bot.use((ctx, next) => checkSubscription(ctx, next, bot));
+
 process.once('SIGINT', () => bot.stop('SIGINT'));
 process.once('SIGTERM', () => bot.stop('SIGTERM'));
 
@@ -43,7 +45,6 @@ await bot.api.setMyCommands([
 ]);
 
 bot.use(handleThreadId);
-bot.use((ctx, next) => checkSubscription(ctx, next, bot));
 bot.command('start', spamProtection, isAdmin, startCmd);
 bot.command('add', spamProtection, isAdmin, addCmd);
 bot.command('del', spamProtection, isAdmin, delCmd);
