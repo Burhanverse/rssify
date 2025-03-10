@@ -98,8 +98,9 @@ export const sendRssUpdates = async () => {
                         console.log(`Sent content in chat ${chatId} for ${rssUrl}`);
                         await delay(1000); // 1sec delay.
                     } catch (error) {
-                        if (error.on?.payload?.chat_id) {
-                            console.error(`Failed to send to chat ${error.on.payload.chat_id}`);
+                        if (error.error_code === 403 || error.description?.includes('bot was blocked') ||
+                            error.description?.includes('chat not found') || error.description?.includes('user is deactivated')) {
+                            console.error(`Failed to send to chat ${chatId}: ${error.description}`);
                             await chatCollection.deleteOne({ chatId });
                             console.log(`Deleted chat ${chatId} from database`);
                             break;
