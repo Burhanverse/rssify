@@ -9,7 +9,12 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export const delAllCmd = async (ctx) => {
-    await ctx.react('😱');
+    try {
+        await ctx.react('😱');
+    } catch (error) {
+        console.log("Unable to react to message:", error.description || error.message);
+    }
+
     const chatId = ctx.chat.id.toString();
 
     const chat = await chatCollection.findOne({ chatId });

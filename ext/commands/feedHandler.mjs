@@ -1,7 +1,12 @@
 import { chatCollection } from '../db.mjs';
 
 export const pauseCmd = async (ctx) => {
-    await ctx.react('🤨');
+    try {
+        await ctx.react('🤨');
+    } catch (error) {
+        console.log("Unable to react to message:", error.description || error.message);
+    }
+
     const chatId = ctx.chat.id.toString();
 
     const chat = await chatCollection.findOne({ chatId });
@@ -19,7 +24,12 @@ export const pauseCmd = async (ctx) => {
 };
 
 export const resumeCmd = async (ctx) => {
-    await ctx.react('😁');
+    try {
+        await ctx.react('😁');
+    } catch (error) {
+        console.log("Unable to react to message:", error.description || error.message);
+    }
+
     const chatId = ctx.chat.id.toString();
 
     const chat = await chatCollection.findOne({ chatId });

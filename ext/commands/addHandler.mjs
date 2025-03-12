@@ -12,7 +12,12 @@ const BOT_TOKEN = process.env.TOKEN;
 const bot = new Bot(BOT_TOKEN);
 
 export const addCmd = async (ctx) => {
-  await ctx.react('❤‍🔥');
+  try {
+    await ctx.react('❤‍🔥');
+  } catch (error) {
+    console.log("Unable to react to message:", error.description || error.message);
+  }
+
   const rssUrl = ctx.message.text.split(' ')[1];
   if (!rssUrl) {
     return ctx.reply('Usage: /add <code>source_url</code>', { parse_mode: 'HTML' });

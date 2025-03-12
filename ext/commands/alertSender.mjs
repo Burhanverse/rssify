@@ -10,7 +10,12 @@ const BOT_TOKEN = process.env.TOKEN;
 const bot = new Bot(BOT_TOKEN);
 
 export const alertSender = async (ctx) => {
-    await ctx.react('🍾');
+    try {
+        await ctx.react('🍾');
+    } catch (error) {
+        console.log("Unable to react to message:", error.description || error.message);
+    }
+
     const chatId = ctx.chat.id.toString();
     const authorizedUser = process.env.OWNER_ID;
 

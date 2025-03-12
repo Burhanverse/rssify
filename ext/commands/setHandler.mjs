@@ -1,7 +1,12 @@
 import { chatCollection } from '../db.mjs';
 
 export const setCmd = async (ctx) => {
-  await ctx.react('👌');
+  try {
+    await ctx.react('👌');
+  } catch (error) {
+    console.log("Unable to react to message:", error.description || error.message);
+  }
+
   const chatId = ctx.chat.id.toString();
   const topicId = ctx.message.message_thread_id;
 

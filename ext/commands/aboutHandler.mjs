@@ -27,7 +27,12 @@ const getBotDetails = () => {
 
 // About Command
 export const aboutCmd = async (ctx) => {
-  await ctx.react("👀");
+  try {
+    await ctx.react("👀");
+  } catch (error) {
+    console.log("Unable to react to message:", error.description || error.message);
+  }
+
   const { version, apivar, description, author, homepage, issues, license, copyright } = getBotDetails();
   const message =
     `<b>About Bot:</b> <i>${escapeHTML(description)}</i>\n\n` +
