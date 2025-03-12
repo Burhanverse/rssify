@@ -14,8 +14,8 @@
     "xml2js": "^0.6.2"
   },
   "name": "rssify",
-  "version": "4.4",
-  "apivar": "3.5",
+  "version": "4.5",
+  "apivar": "3.6",
   "description": "RSS-ify brings you the latest updates from your favorite feeds right into Telegram, hassle-free!",
   "main": "bot.mjs",
   "scripts": {
