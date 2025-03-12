@@ -1,3 +1,4 @@
+import { log } from './colorLog.mjs';
 import { spamCollection, logCollection } from './db.mjs';
 
 // Middleware to automatically include message_thread_id if available from message or callbackQuery
@@ -39,7 +40,7 @@ export const isAdmin = async (ctx, next) => {
       );
     }
   } catch (err) {
-    console.error('Error in isAdmin middleware:', err);
+    log.error('Error in isAdmin middleware:', err);
     return ctx.reply('<i>Unable to verify your access rights.</i>',
       { parse_mode: 'HTML' }
     );
@@ -90,7 +91,7 @@ export const spamProtection = async (ctx, next) => {
     );
     next();
   } catch (err) {
-    console.error('Spam protection failed:', err.message);
+    log.error('Spam protection failed:', err.message);
     next();
   }
 };

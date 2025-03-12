@@ -1,6 +1,7 @@
 import { exec } from 'node:child_process';
 import { promisify } from 'node:util';
 import prettyBytes from 'pretty-bytes';
+import { log } from '../colorLog.mjs';
 
 const execPromise = promisify(exec);
 
@@ -24,7 +25,7 @@ export const statsCmd = async (ctx) => {
   try {
     await ctx.react('⚡');
   } catch (error) {
-    console.log("Unable to react to message:", error.description || error.message);
+    log.warn("Unable to react to message:", error.description || error.message);
   }
 
   const start = Date.now();
@@ -50,7 +51,7 @@ export const statsCmd = async (ctx) => {
     );
 
   } catch (err) {
-    console.error('Error in /stats command:', err);
+    log.error('Error in /stats command:', err);
     await ctx.reply('<i>An error occurred while fetching server stats. Please try again later.</i>',
       { parse_mode: 'HTML' }
     );

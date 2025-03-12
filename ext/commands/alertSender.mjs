@@ -1,6 +1,7 @@
 import { Bot } from "grammy";
 import { chatCollection } from '../db.mjs';
 import dotenv from 'dotenv';
+import { log } from "../colorLog.mjs";
 
 dotenv.config();
 
@@ -13,7 +14,7 @@ export const alertSender = async (ctx) => {
     try {
         await ctx.react('🍾');
     } catch (error) {
-        console.log("Unable to react to message:", error.description || error.message);
+        log.warn("Unable to react to message:", error.description || error.message);
     }
 
     const chatId = ctx.chat.id.toString();
@@ -49,11 +50,11 @@ export const alertSender = async (ctx) => {
         } catch (error) {
             if (error.error_code === 403 || error.description?.includes('bot was blocked') ||
                 error.description?.includes('chat not found') || error.description?.includes('user is deactivated')) {
-                console.error(`Failed to send to chat ${subscriber.chatId}: ${error.description}`);
+                log.error(`Failed to send to chat ${subscriber.chatId}: ${error.description}`);
                 await chatCollection.deleteOne({ chatId: subscriber.chatId });
-                console.log(`Deleted chat ${subscriber.chatId} from database`);
+                log.debug(`Deleted chat ${subscriber.chatId} from database`);
             } else {
-                console.error('Send message error:', error.message);
+                log.error('Send message error:', error.message);
             }
             failCount++;
         }

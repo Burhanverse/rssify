@@ -2,6 +2,7 @@
 import { InlineKeyboard } from 'grammy';
 import { escapeHTML } from '../escapeHelper.mjs';
 import { chatCollection } from '../db.mjs';
+import { log } from '../colorLog.mjs';
 
 // Utility function to split an array into chunks of a given size.
 export function chunkArray(arr, chunkSize) {
@@ -52,7 +53,7 @@ export async function handleList(ctx) {
     try {
         await ctx.react('🥱');
     } catch (error) {
-        console.log("Unable to react to message:", error.description || error.message);
+        log.warn("Unable to react to message:", error.description || error.message);
     }
 
     const chatId = ctx.chat.id.toString();

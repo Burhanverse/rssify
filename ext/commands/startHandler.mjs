@@ -1,6 +1,7 @@
 import { Bot } from 'grammy';
 import { chatCollection } from '../db.mjs';
 import dotenv from 'dotenv';
+import { log } from '../colorLog.mjs';
 
 dotenv.config();
 
@@ -14,7 +15,7 @@ export const startCmd = async (ctx) => {
     try {
       await ctx.react("😍");
     } catch (error) {
-      console.log("Unable to react to message:", error.description || error.message);
+      log.warn("Unable to react to message:", error.description || error.message);
     }
 
     const extraOptions = {
@@ -33,11 +34,11 @@ export const startCmd = async (ctx) => {
   } catch (error) {
     if (error.on?.payload?.chat_id) {
       const chatId = error.on.payload.chat_id;
-      console.error(`Failed to send to chat ${chatId}`);
+      log.error(`Failed to send to chat ${chatId}`);
       await chatCollection.deleteOne({ chatId });
-      console.log(`Deleted chat ${chatId} from database`);
+      log.debug(`Deleted chat ${chatId} from database`);
       return;
     }
-    console.error('Send message error:', error.message);
+    log.error('Send message error:', error.message);
   }
 }

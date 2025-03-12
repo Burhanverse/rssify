@@ -25,9 +25,6 @@ const bot = new Bot(BOT_TOKEN);
 
 const checkSubs = createSubscriptionMiddleware(bot);
 
-// Remove the global middleware
-// bot.use((ctx, next) => checkSubscription(ctx, next, bot));
-
 process.once('SIGINT', () => bot.stop('SIGINT'));
 process.once('SIGTERM', () => bot.stop('SIGTERM'));
 

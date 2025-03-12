@@ -4,6 +4,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { chatCollection, logCollection } from '../db.mjs';
 import { escapeXML } from '../escapeHelper.mjs';
+import { log } from '../colorLog.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -12,7 +13,7 @@ export const delAllCmd = async (ctx) => {
     try {
         await ctx.react('😱');
     } catch (error) {
-        console.log("Unable to react to message:", error.description || error.message);
+        log.warn("Unable to react to message:", error.description || error.message);
     }
 
     const chatId = ctx.chat.id.toString();
@@ -72,7 +73,7 @@ export const delAllCmd = async (ctx) => {
         });
 
     } catch (err) {
-        console.error('Feed deletion failed:', err);
+        log.error('Feed deletion failed:', err);
         return ctx.reply("<i>Failed to delete feeds. Please try again later.</i>", {
             parse_mode: 'HTML'
         });

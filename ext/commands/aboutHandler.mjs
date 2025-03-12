@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { escapeHTML } from "../escapeHelper.mjs";
+import { log } from '../colorLog.mjs';
 
 // Middleware for about cmd
 const getBotDetails = () => {
@@ -18,7 +19,7 @@ const getBotDetails = () => {
       copyright: packageData.copyright,
     };
   } catch (err) {
-    console.error('Failed to read package.json:', err.message);
+    log.error('Failed to read package.json:', err.message);
     return {
       version: 'Unknown',
     };
@@ -30,7 +31,8 @@ export const aboutCmd = async (ctx) => {
   try {
     await ctx.react("👀");
   } catch (error) {
-    console.log("Unable to react to message:", error.description || error.message);
+    log.warn();
+    ("Unable to react to message:", error.description || error.message);
   }
 
   const { version, apivar, description, author, homepage, issues, license, copyright } = getBotDetails();

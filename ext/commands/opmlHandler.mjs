@@ -8,6 +8,7 @@ import { fileURLToPath } from 'url';
 import { chatCollection } from '../db.mjs';
 import { escapeXML } from '../escapeHelper.mjs';
 import dotenv from 'dotenv';
+import { log } from '../colorLog.mjs';
 
 dotenv.config();
 
@@ -65,7 +66,7 @@ const parseOpml = async (content) => {
         result.opml.body[0].outline.forEach(processOutline);
         return [...new Set(urls)]; // Return unique URLs
     } catch (err) {
-        console.error('OPML parsing error:', err);
+        log.error('OPML parsing error:', err);
         return [];
     }
 };
@@ -77,7 +78,7 @@ export const handleExport = async (ctx) => {
         try {
             await ctx.react("🗿");
         } catch (error) {
-            console.log("Unable to react to message:", error.description || error.message);
+            log.warn("Unable to react to message:", error.description || error.message);
         }
 
         const chat = await chatCollection.findOne({ chatId });
@@ -100,7 +101,7 @@ export const handleExport = async (ctx) => {
         await ctx.replyWithDocument(new InputFile(filePath, fileName), replyOptions);
         fs.unlinkSync(filePath);
     } catch (err) {
-        console.error('Export failed:', err);
+        log.error('Export failed:', err);
         ctx.reply("<i>Failed to generate export file</i>", { parse_mode: 'HTML' });
     }
 };
@@ -110,7 +111,7 @@ export const handleImport = async (ctx) => {
     try {
         await ctx.react("👨‍💻");
     } catch (error) {
-        console.log("Unable to react to message:", error.description || error.message);
+        log.warn("Unable to react to message:", error.description || error.message);
     }
 
     const chatId = ctx.chat.id.toString();
@@ -194,7 +195,7 @@ export const handleImport = async (ctx) => {
             }
         }
     } catch (err) {
-        console.error('Import error:', err);
+        log.error('Import error:', err);
         try {
             await ctx.reply("<i>Invalid OPML file format</i>", { parse_mode: 'HTML' });
         } catch (replyErr) {
@@ -203,7 +204,7 @@ export const handleImport = async (ctx) => {
                     parse_mode: 'HTML'
                 });
             } else {
-                console.error('Reply error:', replyErr);
+                log.error('Reply error:', replyErr);
             }
         }
     }

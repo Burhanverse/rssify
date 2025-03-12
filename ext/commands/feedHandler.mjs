@@ -1,10 +1,11 @@
+import { log } from '../colorLog.mjs';
 import { chatCollection } from '../db.mjs';
 
 export const pauseCmd = async (ctx) => {
     try {
         await ctx.react('🤨');
     } catch (error) {
-        console.log("Unable to react to message:", error.description || error.message);
+        log.warn("Unable to react to message:", error.description || error.message);
     }
 
     const chatId = ctx.chat.id.toString();
@@ -27,7 +28,7 @@ export const resumeCmd = async (ctx) => {
     try {
         await ctx.react('😁');
     } catch (error) {
-        console.log("Unable to react to message:", error.description || error.message);
+        log.warn("Unable to react to message:", error.description || error.message);
     }
 
     const chatId = ctx.chat.id.toString();

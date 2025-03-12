@@ -1,5 +1,6 @@
 import { Bot } from 'grammy';
 import dotenv from 'dotenv';
+import { log } from './colorLog.mjs';
 import { fetchRss } from './parserApi.mjs';
 import { chatCollection } from './db.mjs';
 import { escapeHTML } from './escapeHelper.mjs';
@@ -23,9 +24,9 @@ export const sendRssUpdates = async () => {
         try {
             const items = await fetchRss(url);
             feedCache.set(url, items);
-            console.log(`Fetched ${items.length} items from ${url}`);
+            log.success(`Fetched ${items.length} items from ${url}`);
         } catch (err) {
-            console.error(`Failed to fetch ${url}:`, err.message);
+            log.error(`Failed to fetch ${url}:`, err.message);
             feedCache.set(url, []);
         }
     }
@@ -39,14 +40,14 @@ export const sendRssUpdates = async () => {
         // Check if feed updates are paused for this chat
         const paused = await isFeedPaused(chatId);
         if (paused) {
-            console.log(`Feed updates are paused for chat ${chatId}. Skipping.`);
+            log.info(`Feed updates are paused for chat ${chatId}. Skipping.`);
             continue;
         }
 
         for (const rssUrl of rssFeeds) {
             // Double-check that the chat is still subscribed to this feed.
             if (!chatSubscription.rssFeeds.includes(rssUrl)) {
-                console.log(`Chat ${chatId} is no longer subscribed to ${rssUrl}. Skipping.`);
+                log.info(`Chat ${chatId} is no longer subscribed to ${rssUrl}. Skipping.`);
                 continue;
             }
 
@@ -64,7 +65,7 @@ export const sendRssUpdates = async () => {
                 }
 
                 if (newItems.length === 0) {
-                    console.log(`No new items in chat ${chatId} for ${rssUrl}`);
+                    log.info(`No new items in chat ${chatId} for ${rssUrl}`);
                     continue;
                 }
 
@@ -73,7 +74,7 @@ export const sendRssUpdates = async () => {
                 for (const item of itemsToSend) {
                     const currentChat = await chatCollection.findOne({ chatId });
                     if (!currentChat?.rssFeeds.includes(rssUrl)) {
-                        console.log(`Chat ${chatId} unsubscribed from ${rssUrl} during sending. Skipping further items.`);
+                        log.info(`Chat ${chatId} unsubscribed from ${rssUrl} during sending. Skipping further items.`);
                         break;
                     }
 
@@ -81,7 +82,7 @@ export const sendRssUpdates = async () => {
                     const currentLinks = currentLog?.lastItems?.map(item => item.link) || [];
 
                     if (currentLinks.includes(item.link)) {
-                        console.log(`Duplicate detected in final check for ${item.link}`);
+                        log.warn(`Duplicate detected in final check for ${item.link}`);
                         continue;
                     }
 
@@ -97,21 +98,21 @@ export const sendRssUpdates = async () => {
                         });
 
                         await updateLastLog(chatId, rssUrl, [item]);
-                        console.log(`Sent content in chat ${chatId} for ${rssUrl}`);
+                        log.success(`Sent content in chat ${chatId} for ${rssUrl}`);
                         await delay(1000); // 1sec delay.
                     } catch (error) {
                         if (error.error_code === 403 || error.description?.includes('bot was blocked') ||
                             error.description?.includes('chat not found') || error.description?.includes('user is deactivated')) {
-                            console.error(`Failed to send to chat ${chatId}: ${error.description}`);
+                            log.error(`Failed to send to chat ${chatId}: ${error.description}`);
                             await chatCollection.deleteOne({ chatId });
-                            console.log(`Deleted chat ${chatId} from database`);
+                            log.warn(`Deleted chat ${chatId} from database`);
                             break;
                         }
-                        console.error('Send message error:', error.message);
+                        log.error('Send message error:', error.message);
                     }
                 }
             } catch (err) {
-                console.error(`Error processing ${rssUrl} for chat ${chatId}:`, err.message);
+                log.error(`Error processing ${rssUrl} for chat ${chatId}:`, err.message);
             }
         }
     }
@@ -123,13 +124,13 @@ export async function startCycle() {
     if (isProcessing) return;
     isProcessing = true;
     try {
-        console.log('Starting RSS update cycle...');
+        log.start('Starting RSS update cycle...');
         await sendRssUpdates();
     } catch (err) {
-        console.error('Error in sendRssUpdates:', err);
+        log.error('Error in sendRssUpdates:', err);
     } finally {
         isProcessing = false;
-        console.log('Cycle complete. Waiting 10 seconds before starting next cycle...');
+        log.success('Cycle complete. Waiting 10 seconds before starting next cycle...');
         setTimeout(startCycle, 10 * 1000);
     }
 }

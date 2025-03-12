@@ -4,6 +4,7 @@ import { fetchRss } from "../parserApi.mjs";
 import { chatCollection } from "../db.mjs";
 import { updateLastLog } from "../middlewares.mjs";
 import { escapeHTML } from "../escapeHelper.mjs";
+import { log } from '../colorLog.mjs';
 
 dotenv.config();
 
@@ -15,7 +16,7 @@ export const addCmd = async (ctx) => {
   try {
     await ctx.react('❤‍🔥');
   } catch (error) {
-    console.log("Unable to react to message:", error.description || error.message);
+    log.warn("Unable to react to message:", error.description || error.message);
   }
 
   const rssUrl = ctx.message.text.split(' ')[1];
@@ -50,7 +51,7 @@ export const addCmd = async (ctx) => {
       parse_mode: 'HTML',
       ...(ctx.message.message_thread_id && { message_thread_id: parseInt(ctx.message.message_thread_id) }),
     });
-    console.log(`Chat ${chatId} added a new feed URL: ${rssUrl}`);
+    log.success(`Chat ${chatId} added a new feed URL: ${rssUrl}`);
 
   } catch (err) {
     ctx.reply(`<i>Failed to add feed</i>: ${escapeHTML(err.message)}`, {

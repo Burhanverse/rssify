@@ -1,11 +1,12 @@
 import { escapeHTML } from '../escapeHelper.mjs';
 import { chatCollection, logCollection } from '../db.mjs';
+import { log } from '../colorLog.mjs';
 
 export const delCmd = async (ctx) => {
   try {
     await ctx.react('😢');
   } catch (error) {
-    console.log("Unable to react to message:", error.description || error.message);
+    log.warn("Unable to react to message:", error.description || error.message);
   }
 
   const rssUrl = ctx.message.text.split(' ')[1];

@@ -1,5 +1,6 @@
 import dotenv from 'dotenv';
 import { InlineKeyboard } from 'grammy';
+import { log } from './colorLog.mjs';
 
 dotenv.config();
 
@@ -19,7 +20,7 @@ const isSubscribed = async (bot, channelId, userId) => {
         const member = await bot.api.getChatMember(formattedChannelId, userId);
         return ['member', 'administrator', 'creator'].includes(member.status);
     } catch (error) {
-        console.error(`Failed to check membership for channel ${channelId}:`, error);
+        log.error(`Failed to check membership for channel ${channelId}:`, error);
         return false;
     }
 };
@@ -57,7 +58,7 @@ export const createSubscriptionMiddleware = (bot) => {
             });
 
         } catch (error) {
-            console.error("Error in subscription middleware:", error);
+            log.error("Error in subscription middleware:", error);
             await ctx.reply("An error occurred. Please try again later.");
         }
     };

@@ -1,6 +1,7 @@
 // db.mjs - Extension Module for MongoDB Connection
 import { MongoClient } from 'mongodb';
 import dotenv from 'dotenv';
+import { log } from './colorLog.mjs';
 
 dotenv.config();
 
@@ -23,9 +24,9 @@ export async function connectDB() {
         chatCollection = db.collection('chats');
         logCollection = db.collection('logs');
         spamCollection = db.collection('spam');
-        console.log('Connected to MongoDB');
+        log.success('Connected to MongoDB');
     } catch (err) {
-        console.error('Failed to connect to MongoDB:', err.message);
+        log.error('Failed to connect to MongoDB:', err.message);
         process.exit(1);
     }
 }
