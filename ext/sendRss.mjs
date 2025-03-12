@@ -99,7 +99,7 @@ export const sendRssUpdates = async () => {
 
                         await updateLastLog(chatId, rssUrl, [item]);
                         log.success(`Sent content in chat ${chatId} for ${rssUrl}`);
-                        await delay(1000); // 1sec delay.
+                        await delay(2000); // 2sec delay.
                     } catch (error) {
                         if (error.error_code === 403 || error.description?.includes('bot was blocked') ||
                             error.description?.includes('chat not found') || error.description?.includes('user is deactivated')) {
@@ -108,11 +108,27 @@ export const sendRssUpdates = async () => {
                             log.warn(`Deleted chat ${chatId} from database`);
                             break;
                         }
-                        log.error('Send message error:', error.message);
+
+                        log.error(`Send message error for chat ${chatId}:`, {
+                            message: error.message,
+                            code: error.code,
+                            errorCode: error.error_code,
+                            description: error.description,
+                            stack: error.stack?.split('\n')[0],
+                            type: error.constructor.name
+                        });
+
+                        if (error.message?.includes('Network request') || error.code === 'ECONNRESET' || error.code === 'ETIMEDOUT') {
+                            log.warn(`Network error occurred, will retry in next cycle for ${chatId}`);
+                        }
                     }
                 }
             } catch (err) {
-                log.error(`Error processing ${rssUrl} for chat ${chatId}:`, err.message);
+                log.error(`Error processing ${rssUrl} for chat ${chatId}:`, {
+                    message: err.message,
+                    stack: err.stack?.split('\n')[0],
+                    type: err.constructor.name
+                });
             }
         }
     }
