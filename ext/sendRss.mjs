@@ -4,7 +4,7 @@ import { fetchRss } from './parserApi.mjs';
 import { chatCollection } from './db.mjs';
 import { escapeHTML } from './escapeHelper.mjs';
 import { isFeedPaused } from './commands/feedHandler.mjs';
-import { updateLastLog, getLastLog, delay } from './middlewares.mjs';
+import { updateLastLog, getLastLog, delay, rateLimitSending } from './middlewares.mjs';
 
 dotenv.config();
 
@@ -89,9 +89,11 @@ export const sendRssUpdates = async () => {
                         `<a href="${escapeHTML(item.link)}"><i>Source</i></a>`;
 
                     try {
-                        await bot.api.sendMessage(chatId, message, {
-                            parse_mode: 'HTML',
-                            ...(topicId && { message_thread_id: parseInt(topicId) }),
+                        await rateLimitSending(chatId, async () => {
+                            return await bot.api.sendMessage(chatId, message, {
+                                parse_mode: 'HTML',
+                                ...(topicId && { message_thread_id: parseInt(topicId) }),
+                            });
                         });
 
                         await updateLastLog(chatId, rssUrl, [item]);

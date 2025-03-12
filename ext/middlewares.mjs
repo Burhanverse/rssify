@@ -95,6 +95,64 @@ export const spamProtection = async (ctx, next) => {
   }
 };
 
+// Rate limit settings
+const messageQueues = new Map();
+
+const RATE_LIMIT = {
+  PRIVATE: { messages: 25, period: 60000 }, // 25 messages per minute
+  GROUP: { messages: 15, period: 60000 }    // 15 messages per minute 
+};
+
+export const rateLimitSending = async (chatId, sendFunction) => {
+  const chatKey = chatId.toString();
+
+  if (!messageQueues.has(chatKey)) {
+    messageQueues.set(chatKey, {
+      lastSent: 0,
+      sentCount: 0,
+      resetTime: Date.now() + RATE_LIMIT.GROUP.period
+    });
+  }
+
+  const queue = messageQueues.get(chatKey);
+  const now = Date.now();
+
+  if (now > queue.resetTime) {
+    queue.sentCount = 0;
+    queue.resetTime = now + RATE_LIMIT.GROUP.period;
+  }
+
+  let delayMs = 0;
+
+  if (queue.sentCount >= RATE_LIMIT.GROUP.messages) {
+    delayMs = queue.resetTime - now;
+  } else if (queue.lastSent > 0) {
+    const timeSinceLastSend = now - queue.lastSent;
+    delayMs = Math.max(0, 300 - timeSinceLastSend);
+  }
+
+  if (delayMs > 0) {
+    await delay(delayMs);
+  }
+
+  try {
+    const result = await sendFunction();
+    queue.lastSent = Date.now();
+    queue.sentCount++;
+    return result;
+  } catch (error) {
+    if (error.description?.includes('Too Many Requests')) {
+      const retryAfter = (error.parameters?.retry_after || 5) * 1000;
+      await delay(retryAfter);
+      const result = await sendFunction();
+      queue.lastSent = Date.now();
+      queue.sentCount++;
+      return result;
+    }
+    throw error;
+  }
+};
+
 // Last log functions
 export const getLastLog = async (chatId, rssUrl) => {
   return await logCollection.findOne({ chatId, rssUrl });
