@@ -29,21 +29,34 @@ export const alertSender = async (ctx) => {
 
     const subscribers = await chatCollection.find().toArray();
 
+    let successCount = 0;
+    let failCount = 0;
+
     for (const subscriber of subscribers) {
         try {
-            await bot.api.forwardMessage(subscriber.chatId, chatId, originalMessage.message_id);
+            await bot.api.sendMessage(
+                subscriber.chatId,
+                originalMessage.text || "Alert from administrator",
+                {
+                    parse_mode: 'HTML',
+                    ...(subscriber.topicId && { message_thread_id: parseInt(subscriber.topicId) }),
+                }
+            );
+            successCount++;
         } catch (error) {
-            if (error.on?.payload?.chat_id) {
-                console.error(`Failed to send to chat ${error.on.payload.chat_id}`);
+            if (error.error_code === 403 || error.description?.includes('bot was blocked') ||
+                error.description?.includes('chat not found') || error.description?.includes('user is deactivated')) {
+                console.error(`Failed to send to chat ${subscriber.chatId}: ${error.description}`);
                 await chatCollection.deleteOne({ chatId: subscriber.chatId });
                 console.log(`Deleted chat ${subscriber.chatId} from database`);
-                break;
+            } else {
+                console.error('Send message error:', error.message);
             }
-            console.error('Send message error:', error.message);
+            failCount++;
         }
     }
 
-    ctx.reply('<i>Message forwarded successfully.</i>',
+    return ctx.reply(`<i>Alert sent to ${successCount} chats.\n${failCount} failed.</i>`,
         { parse_mode: 'HTML' }
     );
 }
