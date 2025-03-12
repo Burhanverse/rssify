@@ -24,12 +24,14 @@ export const colors = {
 };
 
 export const log = {
-    info: (message) => console.log(`${colors.cyan}[INFO]${colors.reset} ${message}`),
-    success: (message) => console.log(`${colors.green}[SUCCESS]${colors.reset} ${message}`),
-    warn: (message) => console.log(`${colors.yellow}[WARNING]${colors.reset} ${message}`),
-    error: (message) => console.error(`${colors.red}[ERROR]${colors.reset} ${message}`),
-    debug: (message) => console.log(`${colors.magenta}[DEBUG]${colors.reset} ${message}`),
-    start: (message) => console.log(`${colors.green}[START]${colors.reset} ${colors.bright}${message}${colors.reset}`),
-    custom: (label, message, labelColor = colors.blue) =>
-        console.log(`${labelColor}[${label}]${colors.reset} ${message}`)
+    info: (...args) => console.log(`${colors.cyan}[INFO]${colors.reset}`, ...args),
+    success: (...args) => console.log(`${colors.green}[SUCCESS]${colors.reset}`, ...args),
+    warn: (...args) => console.log(`${colors.yellow}[WARNING]${colors.reset}`, ...args),
+    error: (...args) => console.error(`${colors.red}[ERROR]${colors.reset}`, ...args),
+    debug: (...args) => console.log(`${colors.magenta}[DEBUG]${colors.reset}`, ...args),
+    start: (...args) => console.log(`${colors.green}[START]${colors.reset} ${colors.bright}`, ...args, colors.reset),
+    custom: (label, ...args) => {
+        const labelColor = args[0]?.color || colors.blue;
+        console.log(`${labelColor}[${label}]${colors.reset}`, ...args.slice(args[0]?.color ? 1 : 0));
+    }
 };
