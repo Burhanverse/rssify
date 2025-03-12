@@ -1,7 +1,7 @@
 import { Bot } from "grammy";
-import { chatCollection } from '../db.mjs';
+import { chatCollection } from '../utils/db.mjs';
 import dotenv from 'dotenv';
-import { log } from "../colorLog.mjs";
+import { log } from "../utils/colorLog.mjs";
 
 dotenv.config();
 

@@ -1,11 +1,11 @@
 import { Bot } from 'grammy';
 import dotenv from 'dotenv';
-import { log } from './colorLog.mjs';
-import { fetchRss } from './parserApi.mjs';
-import { chatCollection } from './db.mjs';
-import { escapeHTML } from './escapeHelper.mjs';
+import { log } from './utils/colorLog.mjs';
+import { fetchRss } from './utils/parserApi.mjs';
+import { chatCollection } from './utils/db.mjs';
+import { escapeHTML } from './utils/escapeHelper.mjs';
 import { isFeedPaused } from './commands/feedHandler.mjs';
-import { updateLastLog, getLastLog, delay, rateLimitSending } from './middlewares.mjs';
+import { updateLastLog, getLastLog, delay, rateLimitSending } from './utils/middlewares.mjs';
 
 dotenv.config();
 

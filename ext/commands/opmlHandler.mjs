@@ -5,10 +5,10 @@ import fs from 'fs';
 import path from 'path';
 import axios from 'axios';
 import { fileURLToPath } from 'url';
-import { chatCollection } from '../db.mjs';
-import { escapeXML } from '../escapeHelper.mjs';
+import { chatCollection } from '../utils/db.mjs';
+import { escapeXML } from '../utils/escapeHelper.mjs';
 import dotenv from 'dotenv';
-import { log } from '../colorLog.mjs';
+import { log } from '../utils/colorLog.mjs';
 
 dotenv.config();
 

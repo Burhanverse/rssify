@@ -1,5 +1,5 @@
-import { log } from '../colorLog.mjs';
-import { chatCollection } from '../db.mjs';
+import { log } from '../utils/colorLog.mjs';
+import { chatCollection } from '../utils/db.mjs';
 
 export const pauseCmd = async (ctx) => {
     try {

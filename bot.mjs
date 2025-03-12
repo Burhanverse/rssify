@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 import { Bot } from 'grammy';
-import { connectDB } from './ext/db.mjs';
+import { connectDB } from './ext/utils/db.mjs';
 import { startCycle } from "./ext/sendRss.mjs";
 import { addCmd } from './ext/commands/addHandler.mjs';
 import { delCmd } from './ext/commands/delHandler.mjs';
@@ -8,13 +8,13 @@ import { setCmd } from './ext/commands/setHandler.mjs';
 import { startCmd } from './ext/commands/startHandler.mjs';
 import { statsCmd } from './ext/commands/statsHandler.mjs';
 import { aboutCmd } from './ext/commands/aboutHandler.mjs';
-import { createSubscriptionMiddleware } from './ext/isSubscribed.mjs';
+import { createSubscriptionMiddleware } from './ext/utils/isSubscribed.mjs';
 import { delAllCmd } from './ext/commands/delAllHandler.mjs';
 import { alertSender } from './ext/commands/alertSender.mjs';
 import { pauseCmd, resumeCmd } from './ext/commands/feedHandler.mjs';
 import { handleExport, handleImport } from './ext/commands/opmlHandler.mjs';
 import { handleList, handlePagination } from './ext/commands/listHandler.mjs';
-import { isAdmin, spamProtection, handleThreadId } from './ext/middlewares.mjs';
+import { isAdmin, spamProtection, handleThreadId } from './ext/utils/middlewares.mjs';
 
 dotenv.config();
 

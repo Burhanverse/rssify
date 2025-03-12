@@ -1,10 +1,10 @@
 import { Bot } from 'grammy';
 import dotenv from 'dotenv';
-import { fetchRss } from "../parserApi.mjs";
-import { chatCollection } from "../db.mjs";
-import { updateLastLog } from "../middlewares.mjs";
-import { escapeHTML } from "../escapeHelper.mjs";
-import { log } from '../colorLog.mjs';
+import { fetchRss } from "../utils/parserApi.mjs";
+import { chatCollection } from "../utils/db.mjs";
+import { updateLastLog } from "../utils/middlewares.mjs";
+import { escapeHTML } from "../utils/escapeHelper.mjs";
+import { log } from '../utils/colorLog.mjs';
 
 dotenv.config();
 

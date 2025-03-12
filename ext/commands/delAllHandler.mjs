@@ -2,9 +2,9 @@ import { InputFile } from 'grammy';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { chatCollection, logCollection } from '../db.mjs';
-import { escapeXML } from '../escapeHelper.mjs';
-import { log } from '../colorLog.mjs';
+import { chatCollection, logCollection } from '../utils/db.mjs';
+import { escapeXML } from '../utils/escapeHelper.mjs';
+import { log } from '../utils/colorLog.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

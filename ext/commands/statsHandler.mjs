@@ -1,7 +1,7 @@
 import { exec } from 'node:child_process';
 import { promisify } from 'node:util';
 import prettyBytes from 'pretty-bytes';
-import { log } from '../colorLog.mjs';
+import { log } from '../utils/colorLog.mjs';
 
 const execPromise = promisify(exec);
 

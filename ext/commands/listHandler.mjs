@@ -1,8 +1,8 @@
 // listHandler.mjs
 import { InlineKeyboard } from 'grammy';
-import { escapeHTML } from '../escapeHelper.mjs';
-import { chatCollection } from '../db.mjs';
-import { log } from '../colorLog.mjs';
+import { escapeHTML } from '../utils/escapeHelper.mjs';
+import { chatCollection } from '../utils/db.mjs';
+import { log } from '../utils/colorLog.mjs';
 
 // Utility function to split an array into chunks of a given size.
 export function chunkArray(arr, chunkSize) {

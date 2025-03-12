@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
-import { escapeHTML } from "../escapeHelper.mjs";
-import { log } from '../colorLog.mjs';
+import { escapeHTML } from "../utils/escapeHelper.mjs";
+import { log } from '../utils/colorLog.mjs';
 
 // Middleware for about cmd
 const getBotDetails = () => {

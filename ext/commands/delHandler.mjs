@@ -1,6 +1,6 @@
-import { escapeHTML } from '../escapeHelper.mjs';
-import { chatCollection, logCollection } from '../db.mjs';
-import { log } from '../colorLog.mjs';
+import { escapeHTML } from '../utils/escapeHelper.mjs';
+import { chatCollection, logCollection } from '../utils/db.mjs';
+import { log } from '../utils/colorLog.mjs';
 
 export const delCmd = async (ctx) => {
   try {
