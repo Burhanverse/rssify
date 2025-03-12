@@ -34,13 +34,11 @@ export const alertSender = async (ctx) => {
 
     for (const subscriber of subscribers) {
         try {
-            await bot.api.sendMessage(
+            await bot.api.forwardMessage(
                 subscriber.chatId,
-                originalMessage.text || "Alert from administrator",
-                {
-                    parse_mode: 'HTML',
-                    ...(subscriber.topicId && { message_thread_id: parseInt(subscriber.topicId) }),
-                }
+                ctx.chat.id,
+                originalMessage.message_id,
+                subscriber.topicId ? { message_thread_id: parseInt(subscriber.topicId) } : {}
             );
             successCount++;
         } catch (error) {
@@ -56,7 +54,7 @@ export const alertSender = async (ctx) => {
         }
     }
 
-    return ctx.reply(`<i>Alert sent to ${successCount} chats.\n${failCount} failed.</i>`,
+    return ctx.reply(`<i>Alert forwarded to ${successCount} chats.\n${failCount} failed.</i>`,
         { parse_mode: 'HTML' }
     );
 }
