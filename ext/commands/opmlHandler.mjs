@@ -87,8 +87,14 @@ export const handleExport = async (ctx) => {
         }
 
         const opmlContent = generateOpml(chat.rssFeeds);
-        const fileName = `rssify_export_${Date.now()}.opml`;
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const fileName = `rssify_export_${year}-${month}-${day}.opml`;
         const filePath = path.join(__dirname, fileName);
+        const dirPath = path.dirname(filePath);
+        fs.mkdirSync(dirPath, { recursive: true });
 
         fs.writeFileSync(filePath, opmlContent);
         const replyOptions = {
