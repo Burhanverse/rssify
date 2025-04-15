@@ -15,8 +15,6 @@ import { pauseCmd, resumeCmd } from './ext/commands/feedHandler.mjs';
 import { handleExport, handleImport } from './ext/commands/opmlHandler.mjs';
 import { handleList, handlePagination } from './ext/commands/listHandler.mjs';
 import { isAdmin, spamProtection, handleThreadId } from './ext/utils/middlewares.mjs';
-import { adultContentFilter, scanForAdultContent } from './ext/utils/adultContentFilter.mjs';
-import { log } from './ext/utils/colorLog.mjs';
 
 dotenv.config();
 
@@ -48,7 +46,7 @@ await bot.api.setMyCommands([
 
 bot.use(handleThreadId);
 bot.command('start', checkSubs, spamProtection, isAdmin, startCmd);
-bot.command('add', checkSubs, spamProtection, isAdmin, adultContentFilter, addCmd);
+bot.command('add', checkSubs, spamProtection, isAdmin, addCmd);
 bot.command('del', checkSubs, spamProtection, isAdmin, delCmd);
 bot.command('set', checkSubs, spamProtection, isAdmin, setCmd);
 bot.command('pause', checkSubs, spamProtection, isAdmin, pauseCmd);
@@ -64,17 +62,6 @@ bot.command('del_all', checkSubs, spamProtection, isAdmin, delAllCmd);
 
 (async () => {
   await connectDB();
-
-  // Initial scan for adult content
-  log.start('Running initial scan for inappropriate content...');
-  await scanForAdultContent();
-
-  // Setup periodic scan (every 24 hours)
-  setInterval(async () => {
-    log.info('Running periodic scan for inappropriate content...');
-    await scanForAdultContent();
-  }, 24 * 60 * 60 * 1000);
-
   startCycle();
   bot.start({
     drop_pending_updates: true,
