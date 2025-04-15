@@ -50,24 +50,100 @@ const generateOpml = (urls, options = {}) => {
 //  OPML Parser
 const parseOpml = async (content) => {
     try {
-        const parser = new xml2js.Parser();
+        const parser = new xml2js.Parser({
+            explicitArray: false,
+            normalizeTags: true,
+            attrValueProcessors: [
+                (value) => decodeURIComponent(encodeURIComponent(value).replace(/%[0-9A-F]{2}/g, (match) => match))
+            ]
+        });
+
         const result = await parser.parseStringPromise(content);
         const urls = [];
 
         const processOutline = (outline) => {
-            if (outline.$.type === 'rss' && outline.$.xmlUrl) {
-                urls.push(outline.$.xmlUrl);
+            if (!outline) return;
+
+            if (outline.$ && outline.$.type === 'rss' && outline.$.xmlurl) {
+                urls.push(outline.$.xmlurl);
             }
+
             if (outline.outline) {
-                outline.outline.forEach(processOutline);
+                if (Array.isArray(outline.outline)) {
+                    outline.outline.forEach(item => processOutline(item));
+                } else {
+                    processOutline(outline.outline);
+                }
             }
         };
 
-        result.opml.body[0].outline.forEach(processOutline);
-        return [...new Set(urls)]; // Return unique URLs
+        if (result.opml && result.opml.body) {
+            if (Array.isArray(result.opml.body)) {
+                result.opml.body.forEach(body => {
+                    if (body.outline) {
+                        if (Array.isArray(body.outline)) {
+                            body.outline.forEach(outline => processOutline(outline));
+                        } else {
+                            processOutline(body.outline);
+                        }
+                    }
+                });
+            } else if (result.opml.body.outline) {
+                if (Array.isArray(result.opml.body.outline)) {
+                    result.opml.body.outline.forEach(outline => processOutline(outline));
+                } else {
+                    processOutline(result.opml.body.outline);
+                }
+            }
+        }
+
+        if (urls.length === 0) {
+            log.warn('Standard parsing found no URLs, trying fallback extraction');
+            const xmlUrlRegex = /xmlUrl=["']([^"']+)["']/gi;
+            let match;
+            while ((match = xmlUrlRegex.exec(content)) !== null) {
+                if (match[1] && match[1].trim()) {
+                    urls.push(match[1].trim());
+                }
+            }
+        }
+
+        return [...new Set(urls)].filter(url => {
+            try {
+                new URL(url);
+                return true;
+            } catch (e) {
+                log.warn(`Invalid URL skipped: ${url}`);
+                return false;
+            }
+        });
     } catch (err) {
         log.error('OPML parsing error:', err);
-        return [];
+
+        try {
+            log.warn('XML parsing failed, attempting regex-based extraction');
+            const urls = [];
+            const xmlUrlRegex = /xmlUrl=["']([^"']+)["']/gi;
+            let match;
+
+            while ((match = xmlUrlRegex.exec(content)) !== null) {
+                if (match[1] && match[1].trim()) {
+                    urls.push(match[1].trim());
+                }
+            }
+
+            return [...new Set(urls)].filter(url => {
+                try {
+                    new URL(url);
+                    return true;
+                } catch (e) {
+                    return false;
+                }
+            });
+        } catch (regexErr) {
+            log.error('Regex extraction failed:', regexErr);
+            return [];
+        }
     }
 };
 
