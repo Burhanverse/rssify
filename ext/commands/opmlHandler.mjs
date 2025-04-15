@@ -50,22 +50,35 @@ const generateOpml = (urls, options = {}) => {
 //  OPML Parser
 const parseOpml = async (content) => {
     try {
+        const preprocessedContent = content.replace(
+            /(xmlUrl=["'][^"']*)&(?!amp;|lt;|gt;|quot;|apos;|#)([^"']*?=)/g,
+            (match, p1, p2) => `${p1}&amp;${p2}`
+        );
+
         const parser = new xml2js.Parser({
             explicitArray: false,
             normalizeTags: true,
-            attrValueProcessors: [
-                (value) => decodeURIComponent(encodeURIComponent(value).replace(/%[0-9A-F]{2}/g, (match) => match))
-            ]
         });
 
-        const result = await parser.parseStringPromise(content);
-        const urls = [];
+        const result = await parser.parseStringPromise(preprocessedContent);
+        let urls = [];
 
         const processOutline = (outline) => {
             if (!outline) return;
 
             if (outline.$ && outline.$.type === 'rss' && outline.$.xmlurl) {
-                urls.push(outline.$.xmlurl);
+                try {
+                    const decodedUrl = outline.$.xmlurl
+                        .replace(/&amp;/g, '&')
+                        .replace(/&lt;/g, '<')
+                        .replace(/&gt;/g, '>')
+                        .replace(/&quot;/g, '"')
+                        .replace(/&apos;/g, "'");
+                    urls.push(decodedUrl);
+                } catch (decodeError) {
+                    log.warn(`Failed to decode URL after parsing: ${outline.$.xmlurl}`, decodeError);
+                    urls.push(outline.$.xmlurl);
+                }
             }
 
             if (outline.outline) {
@@ -99,13 +112,26 @@ const parseOpml = async (content) => {
 
         if (urls.length === 0) {
             log.warn('Standard parsing found no URLs, trying fallback extraction');
+            const extractedUrls = [];
             const xmlUrlRegex = /xmlUrl=["']([^"']+)["']/gi;
             let match;
             while ((match = xmlUrlRegex.exec(content)) !== null) {
                 if (match[1] && match[1].trim()) {
-                    urls.push(match[1].trim());
+                    try {
+                        const decodedUrl = match[1].trim()
+                            .replace(/&amp;/g, '&')
+                            .replace(/&lt;/g, '<')
+                            .replace(/&gt;/g, '>')
+                            .replace(/&quot;/g, '"')
+                            .replace(/&apos;/g, "'");
+                        extractedUrls.push(decodedUrl);
+                    } catch (decodeError) {
+                        log.warn(`Failed to decode regex-extracted URL: ${match[1].trim()}`, decodeError);
+                        extractedUrls.push(match[1].trim());
+                    }
                 }
             }
+            urls = extractedUrls;
         }
 
         return [...new Set(urls)].filter(url => {
@@ -125,10 +151,20 @@ const parseOpml = async (content) => {
             const urls = [];
             const xmlUrlRegex = /xmlUrl=["']([^"']+)["']/gi;
             let match;
-
             while ((match = xmlUrlRegex.exec(content)) !== null) {
                 if (match[1] && match[1].trim()) {
-                    urls.push(match[1].trim());
+                    try {
+                        const decodedUrl = match[1].trim()
+                            .replace(/&amp;/g, '&')
+                            .replace(/&lt;/g, '<')
+                            .replace(/&gt;/g, '>')
+                            .replace(/&quot;/g, '"')
+                            .replace(/&apos;/g, "'");
+                        urls.push(decodedUrl);
+                    } catch (decodeError) {
+                        log.warn(`Failed to decode regex-extracted URL during fallback: ${match[1].trim()}`, decodeError);
+                        urls.push(match[1].trim());
+                    }
                 }
             }
 
