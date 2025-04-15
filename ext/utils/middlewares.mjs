@@ -1,5 +1,8 @@
 import { log } from './colorLog.mjs';
-import { spamCollection, logCollection } from './db.mjs';
+import { spamCollection, logCollection, chatCollection } from './db.mjs';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 // Middleware to automatically include message_thread_id if available from message or callbackQuery
 export const handleThreadId = async (ctx, next) => {
@@ -151,6 +154,30 @@ export const rateLimitSending = async (chatId, sendFunction) => {
       return result;
     }
     throw error;
+  }
+};
+
+// Middleware to check feed limit
+export const checkFeedLimit = async (ctx, next) => {
+  const chatId = ctx.chat.id.toString();
+  const feedLimit = parseInt(process.env.TFEED, 10) || 20;
+
+  try {
+    const chat = await chatCollection.findOne({ chatId });
+    const currentFeedCount = chat?.rssFeeds?.length || 0;
+
+    if (currentFeedCount >= feedLimit) {
+      log.warn(`Chat ${chatId} reached feed limit (${feedLimit}). Add command blocked.`);
+      return ctx.reply(
+        `<i>You have reached the maximum limit of ${feedLimit} feeds. Remove some feeds before adding new ones.</i>`,
+        { parse_mode: 'HTML' }
+      );
+    }
+
+    return next();
+  } catch (err) {
+    log.error(`Error checking feed limit for chat ${chatId}:`, err);
+    return next();
   }
 };
 
