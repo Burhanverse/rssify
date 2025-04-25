@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { log } from './colorLog.mjs';
 
 // Fetch RSS feeds using ParserAPI
 export const fetchRss = async (rssUrl) => {
@@ -9,15 +8,6 @@ export const fetchRss = async (rssUrl) => {
     });
     return response.data.items;
   } catch (error) {
-    const statusCode = error.response?.status;
-    const errorMessage = error.response?.data?.error || error.message || 'Failed to fetch RSS feed';
-
-    log.error(`for ${rssUrl}: Status ${statusCode}, Message: ${errorMessage}`);
-
-    throw new Error(JSON.stringify({
-      message: errorMessage,
-      status: statusCode || 0,
-      url: rssUrl
-    }));
+    throw new Error(error.response?.data?.error || 'Failed to fetch RSS feed');
   }
 };

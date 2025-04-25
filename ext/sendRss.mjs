@@ -19,7 +19,6 @@ export const sendRssUpdates = async () => {
     const chats = await chatCollection.find({ rssFeeds: { $exists: true, $not: { $size: 0 } } }).toArray();
     const uniqueUrls = [...new Set(chats.flatMap(chat => chat.rssFeeds))];
     const feedCache = new Map();
-    const permanentFailures = new Set();
 
     for (const url of uniqueUrls) {
         try {
@@ -27,52 +26,8 @@ export const sendRssUpdates = async () => {
             feedCache.set(url, items);
             log.success(`Fetched ${items.length} items from ${url}`);
         } catch (err) {
-            let errorDetails = { message: err.message, status: 0, url };
-
-            try {
-                const parsed = JSON.parse(err.message);
-                errorDetails = {
-                    message: parsed.message || err.message,
-                    status: parsed.status || 0,
-                    url: parsed.url || url
-                };
-            } catch (parseErr) {
-                log.warn(`Error parsing error details for ${url}: ${parseErr.message}`);
-            }
-
-            log.error(`Failed to fetch ${url}: ${errorDetails.message} (Status: ${errorDetails.status || 'unknown'})`);
-
-            if (errorDetails.status === 403 || errorDetails.status === 404 || errorDetails.status === 500) {
-                log.warn(`Feed ${url} returned ${errorDetails.status} status - marking for removal`);
-                permanentFailures.add(url);
-            }
-
+            log.error(`Failed to fetch ${url}:`, err.message);
             feedCache.set(url, []);
-        }
-    }
-
-    if (permanentFailures.size > 0) {
-        log.warn(`Found ${permanentFailures.size} permanently failed feeds to remove`);
-
-        for (const failedUrl of permanentFailures) {
-            try {
-                const affectedChats = await chatCollection.countDocuments({ rssFeeds: failedUrl });
-                log.info(`Feed ${failedUrl} is present in ${affectedChats} chats before removal`);
-
-                const result = await chatCollection.updateMany(
-                    { rssFeeds: failedUrl },
-                    { $pull: { rssFeeds: failedUrl } }
-                );
-
-                log.warn(`Removed permanently failed feed ${failedUrl} from ${result.modifiedCount} chats`);
-
-                const remainingChats = await chatCollection.countDocuments({ rssFeeds: failedUrl });
-                if (remainingChats > 0) {
-                    log.error(`Failed to remove ${failedUrl} from all chats! ${remainingChats} chats still have this feed.`);
-                }
-            } catch (err) {
-                log.error(`Failed to remove ${failedUrl} from database:`, err);
-            }
         }
     }
 
@@ -82,6 +37,7 @@ export const sendRssUpdates = async () => {
             continue;
         }
 
+        // Check if feed updates are paused for this chat
         const paused = await isFeedPaused(chatId);
         if (paused) {
             log.info(`Feed updates are paused for chat ${chatId}. Skipping.`);
@@ -89,11 +45,6 @@ export const sendRssUpdates = async () => {
         }
 
         for (const rssUrl of rssFeeds) {
-            if (permanentFailures.has(rssUrl)) {
-                log.info(`Skipping permanently failed feed ${rssUrl} for chat ${chatId}`);
-                continue;
-            }
-
             // Double-check that the chat is still subscribed to this feed.
             if (!chatSubscription.rssFeeds.includes(rssUrl)) {
                 log.info(`Chat ${chatId} is no longer subscribed to ${rssUrl}. Skipping.`);
