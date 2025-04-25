@@ -5,6 +5,7 @@ import { startCycle } from "./ext/sendRss.mjs";
 import { addCmd } from './ext/commands/addHandler.mjs';
 import { delCmd } from './ext/commands/delHandler.mjs';
 import { setCmd } from './ext/commands/setHandler.mjs';
+import { cleanCmd } from "./ext/commands/cleanHandler.mjs";
 import { startCmd } from './ext/commands/startHandler.mjs';
 import { statsCmd } from './ext/commands/statsHandler.mjs';
 import { aboutCmd } from './ext/commands/aboutHandler.mjs';
@@ -43,24 +44,26 @@ await bot.api.setMyCommands([
   { command: "help", description: "Get some drugs..." },
   { command: "stats", description: "Show bot server stats..." },
   { command: "about", description: "Show information about the bot..." },
+  { command: "clean", description: "Clean defunct feeds OWNER ONLY..." },
+  { command: "send", description: "Broadcast a message OWNER ONLY..." },
 ]);
 
 bot.use(handleThreadId);
-bot.command('start', checkSubs, spamProtection, isAdmin, startCmd);
-bot.command('add', checkSubs, checkFeedLimit, spamProtection, isAdmin, adultContentFilter, addCmd);
+bot.command('send', checkSubs, alertSender);
+bot.command('stats', checkSubs, spamProtection, statsCmd);
+bot.command('about', checkSubs, spamProtection, aboutCmd);
+bot.command('clean', checkSubs, spamProtection, cleanCmd);
 bot.command('del', checkSubs, spamProtection, isAdmin, delCmd);
 bot.command('set', checkSubs, spamProtection, isAdmin, setCmd);
 bot.command('pause', checkSubs, spamProtection, isAdmin, pauseCmd);
-bot.command('resume', checkSubs, spamProtection, isAdmin, resumeCmd);
-bot.command('stats', checkSubs, spamProtection, statsCmd);
-bot.command('about', checkSubs, spamProtection, aboutCmd);
+bot.command('start', checkSubs, spamProtection, isAdmin, startCmd);
 bot.command('list', checkSubs, spamProtection, isAdmin, handleList);
-bot.callbackQuery(/^list_(prev|next)_(\d+)$/, checkSubs, spamProtection, isAdmin, handlePagination);
-bot.command('send', checkSubs, alertSender);
+bot.command('resume', checkSubs, spamProtection, isAdmin, resumeCmd);
+bot.command('del_all', checkSubs, spamProtection, isAdmin, delAllCmd);
 bot.command('export', checkSubs, spamProtection, isAdmin, handleExport);
 bot.command('import', checkSubs, spamProtection, isAdmin, handleImport);
-bot.command('del_all', checkSubs, spamProtection, isAdmin, delAllCmd);
-
+bot.command('add', checkSubs, checkFeedLimit, spamProtection, isAdmin, adultContentFilter, addCmd);
+bot.callbackQuery(/^list_(prev|next)_(\d+)$/, checkSubs, spamProtection, isAdmin, handlePagination);
 (async () => {
   await connectDB();
   startCycle();
