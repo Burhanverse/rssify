@@ -252,6 +252,7 @@ export const handleImport = async (ctx) => {
 
         let added = 0;
         const errors = [];
+        const addedUrls = [];
 
         for (const url of urls) {
             try {
@@ -268,6 +269,7 @@ export const handleImport = async (ctx) => {
                     { upsert: true }
                 );
                 added++;
+                addedUrls.push(url);
             } catch (err) {
                 errors.push(`Failed ${url}: ${err.message}`);
             }
@@ -288,8 +290,11 @@ export const handleImport = async (ctx) => {
             return;
         }
 
+        const urlList = addedUrls.map(url => `• ${url}`).join('\n');
+        
         let message =
-            `<b>Imported ${added} feed</b>\n\n` +
+            `<b>Imported ${added} feed${added > 1 ? 's' : ''}</b>\n\n` +
+            `<u>Added feeds:</u>\n${urlList}\n\n` +
             `<i>Reply with /list to view your subscriptions</i>\n` +
             `<i>Updates for the new feeds will be sent in a few minutes.</i>\n\n` +
             `<a href="burhanverse.t.me"><i>Prjkt:Sid.</i></a>`;
