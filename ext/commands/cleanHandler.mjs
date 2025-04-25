@@ -117,11 +117,11 @@ export const cleanCmd = async (ctx) => {
         const hasMoreFeeds = removedFeedsList.length > 5;
 
         return ctx.reply(
-            `<i>Domain cleanup complete:</i>\n` +
+            `<b><i>Domain cleanup complete:</i></b>\n` +
             `<b>Domain:</b> ${domainToClean}\n` +
             `<b>Feeds removed:</b> ${totalFeedsRemoved}\n` +
             `<b>Chats affected:</b> ${chatsAffected}` +
-            (feedSamples ? `\n\n<b>Sample of removed feeds:</b>\n${feedSamples}` : '') +
+            (feedSamples ? `\n\n<b>Removed feeds:</b>\n${feedSamples}` : '') +
             (hasMoreFeeds ? `\n<i>...and ${removedFeedsList.length - 5} more</i>` : ''),
             { parse_mode: 'HTML', disable_web_page_preview: true }
         );
