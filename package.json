@@ -10,7 +10,7 @@
     "markdown-escape": "^2.0.0",
     "mongodb": "^6.13.0",
     "p-limit": "^6.2.0",
-    "pretty-bytes": "^6.1.1",
+    "pretty-bytes": "^7.0.0",
     "xml2js": "^0.6.2"
   },
   "name": "rssify",
