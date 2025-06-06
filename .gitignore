@@ -1,4 +1,5 @@
 node_modules
+venv
 .codebuddy
 config.json
 beta.mjs
