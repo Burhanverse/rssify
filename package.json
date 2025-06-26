@@ -21,7 +21,7 @@
   "scripts": {
     "start": "npm install concurrently && pip install -r api/parserapi/requirements.txt && npm install && npm run rssify",
     "rssify": "concurrently \"npm:api\" \"npm:bot\"",
-    "api": "python3 api/parserapi/api.py",
+    "api": "cd api && python3 -m parserapi",
     "bot": "node bot.mjs"
   },
   "repository": {
