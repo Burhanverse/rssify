@@ -1,6 +1,7 @@
 #!/bin/bash
 
 update_repo() {
+    git stash
     git pull --force
     git submodule update --init --recursive
 }
