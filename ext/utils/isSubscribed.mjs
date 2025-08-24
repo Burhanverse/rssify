@@ -5,13 +5,9 @@ import { log } from './colorLog.mjs';
 dotenv.config();
 
 const CH1 = process.env.CH1;
-const CH2 = process.env.CH2;
-const CH3 = process.env.CH3;
 
 const requiredChannels = [
     { id: CH1?.split('/').pop(), url: CH1 },
-    { id: CH2?.split('/').pop(), url: CH2 },
-    { id: CH3?.split('/').pop(), url: CH3 },
 ].filter(channel => channel.id && channel.url);
 
 const isSubscribed = async (bot, channelId, userId) => {
@@ -44,16 +40,11 @@ export const createSubscriptionMiddleware = (bot) => {
 
             const keyboard = new InlineKeyboard();
 
-            const channelCount = notSubscribedChannels.length;
-            for (let i = 0; i < channelCount; i++) {
-                const channel = notSubscribedChannels[i];
+            for (const channel of notSubscribedChannels) {
                 keyboard.url(`Join @${channel.id}`, channel.url);
-                if (i < 2 && i < channelCount - 1) {
-                    keyboard.row();
-                }
             }
 
-            await ctx.reply("Please join the following channels to continue:", {
+            await ctx.reply("Please join the following channel to continue:", {
                 reply_markup: keyboard
             });
 
