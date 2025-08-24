@@ -160,7 +160,7 @@ export const rateLimitSending = async (chatId, sendFunction) => {
 // Middleware to check feed limit
 export const checkFeedLimit = async (ctx, next) => {
   const chatId = ctx.chat.id.toString();
-  const feedLimit = parseInt(process.env.TFEED, 10) || 20;
+  const feedLimit = parseInt(process.env.FEED_LIMIT, 10) || 20;
 
   try {
     const chat = await chatCollection.findOne({ chatId });
