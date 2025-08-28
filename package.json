@@ -9,7 +9,7 @@
     "grammy": "^1.34.0",
     "markdown-escape": "^2.0.0",
     "mongodb": "^6.13.0",
-    "p-limit": "^6.2.0",
+    "p-limit": "^7.0.0",
     "pretty-bytes": "^7.0.0",
     "xml2js": "^0.6.2"
   },
