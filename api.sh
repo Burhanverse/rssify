@@ -58,14 +58,31 @@ else
   fi
   
   # Create virtual environment if it doesn't exist
-  if [ ! -d "$VENV_DIR" ]; then
-      echo "📦 Creating virtual environment..."
-      $PYTHON_BIN -m venv "$VENV_DIR" || {
-          echo "❌ Failed to create virtual environment."
-          exit 1
-      }
-      echo "✅ Virtual environment created"
-  fi
+if [ ! -d "$VENV_DIR" ]; then
+        echo "📦 Creating virtual environment..."
+        $PYTHON_BIN -m venv "$VENV_DIR" || {
+                echo "❌ Failed to create virtual environment."
+                exit 1
+        }
+        echo "✅ Virtual environment created"
+fi
+
+# Activate the virtual environment based on shell
+SHELL_NAME=$(basename "$SHELL")
+case "$SHELL_NAME" in
+    bash)
+        source "$VENV_DIR/bin/activate"
+        ;;
+    zsh)
+        source "$VENV_DIR/bin/activate"
+        ;;
+    fish)
+        source "$VENV_DIR/bin/activate.fish"
+        ;;
+    *)
+        echo "⚠️ Unknown shell: $SHELL_NAME. Please activate the venv manually if needed."
+        ;;
+esac
   
   # Use venv's Python and pip
   PYTHON_BIN="$VENV_DIR/bin/python"
@@ -76,10 +93,18 @@ echo "🐍 Using Python: $PYTHON_BIN"
 echo "📦 Using Pip: $PIP_BIN"
 
 # Install Python dependencies
+echo "📦 Installing Python dependencies..."
 $PIP_BIN install -r api/parserapi/requirements.txt || {
     echo "❌ Failed to install Python dependencies."
     exit 1
 }
+
+echo "✅ Dependencies installed"
+
+# Convert relative paths to absolute before changing directory
+if [[ "$PYTHON_BIN" == api/venv/* ]]; then
+    PYTHON_BIN="$(pwd)/$PYTHON_BIN"
+fi
 
 # Start ParserAPI
 cd api || {
@@ -87,7 +112,5 @@ cd api || {
     exit 1
 }
 
-$PYTHON_BIN -m parserapi || {
-    echo "❌ Failed to start API"
-    exit 1
-}
+echo "🚀 Starting API server..."
+$PYTHON_BIN -m parserapi

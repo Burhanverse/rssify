@@ -28,27 +28,40 @@ echo "======================================"
 
 # Start Python API in background
 echo "🐍 Starting Python API..."
-bash api.sh &
+bash api.sh > /tmp/api.log 2>&1 &
 API_PID=$!
 
-# Wait a moment for API to start
-sleep 3
+# Wait for API to be ready
+echo "⏳ Waiting for API to be ready..."
+for i in {1..30}; do
+    if curl -s http://localhost:5000 >/dev/null 2>&1; then
+        echo "✅ API is running and ready!"
+        break
+    fi
+    sleep 1
+    if [ $i -eq 30 ]; then
+        echo "❌ API failed to start within 30 seconds"
+        echo "📋 Last 20 lines of API log:"
+        tail -20 /tmp/api.log
+        exit 1
+    fi
+done
 
-# Check if API is still running
-if ! kill -0 $API_PID 2>/dev/null; then
-    echo "❌ API failed to start"
-    exit 1
-fi
-
-echo "✅ API started (PID: $API_PID)"
 echo "======================================"
+
+# Activate venv if it exists
+if [ -d "api/venv" ]; then
+    echo "🔧 Activating virtual environment..."
+    source api/venv/bin/activate
+fi
 
 # Start the bot
 echo "🤖 Starting Telegram Bot..."
 node bot.mjs
 
-# Cleanup: Kill API when bot stops
+# Cleanup: Kill all background processes
 echo ""
 echo "🛑 Shutting down..."
 kill $API_PID 2>/dev/null
+pkill -P $$ 2>/dev/null
 echo "✅ Cleanup complete"
