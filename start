@@ -8,10 +8,7 @@ update_repo() {
 
 if [[ "$1" == "-c" ]]; then
     update_repo
-    npm start
-elif [[ "$1" == "-d" ]]; then
-    update_repo
-    npm run rssify
+    bash run.sh --3
 else
-    npm run rssify
+    bash run.sh --3
 fi
