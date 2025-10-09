@@ -1,14 +1,54 @@
 #!/bin/bash
 
+echo "🚀 Starting RSS-ify Setup..."
+echo "======================================"
+
+# Update repository if -c flag is provided
 update_repo() {
+    echo "📦 Updating repository..."
     git stash
     git pull --force
     git submodule update --init --recursive
+    echo "✅ Repository updated"
+    echo "======================================"
 }
 
 if [[ "$1" == "-c" ]]; then
     update_repo
-    bash run.sh --3
-else
-    bash run.sh --3
 fi
+
+# Install Node.js dependencies
+echo "📦 Installing Node.js dependencies..."
+npm install || {
+    echo "❌ Failed to install Node.js dependencies."
+    exit 1
+}
+echo "✅ Node.js dependencies installed"
+echo "======================================"
+
+# Start Python API in background
+echo "🐍 Starting Python API..."
+bash api.sh &
+API_PID=$!
+
+# Wait a moment for API to start
+sleep 3
+
+# Check if API is still running
+if ! kill -0 $API_PID 2>/dev/null; then
+    echo "❌ API failed to start"
+    exit 1
+fi
+
+echo "✅ API started (PID: $API_PID)"
+echo "======================================"
+
+# Start the bot
+echo "🤖 Starting Telegram Bot..."
+node bot.mjs
+
+# Cleanup: Kill API when bot stops
+echo ""
+echo "🛑 Shutting down..."
+kill $API_PID 2>/dev/null
+echo "✅ Cleanup complete"

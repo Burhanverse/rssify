@@ -1,35 +1,19 @@
 #!/bin/bash
 
-# Usage:
-# ./run.sh --1  → Use python / pip
-# ./run.sh --2  → Use python3 / pip3
-# ./run.sh --3  → Use python3.12 / pip3.12
-# ./run.sh      → Auto-detect
-
-# Default: auto-detect mode
-MODE="auto"
-
-# Handle arguments
-case "$1" in
-  --1)
-    PYTHON_BIN="python"
-    PIP_BIN="pip"
-    MODE="manual"
-    ;;
-  --2)
-    PYTHON_BIN="python3"
-    PIP_BIN="pip3"
-    MODE="manual"
-    ;;
-  --3)
-    PYTHON_BIN="python3.12"
-    PIP_BIN="pip3.12"
-    MODE="manual"
-    ;;
-esac
+# Check if running in Pterodactyl container
+IS_PTERODACTYL=false
+if [ -f "/.dockerenv" ] && ([ -n "$P_SERVER_UUID" ] || [ -n "$PTERODACTYL" ] || grep -q "pterodactyl" /proc/1/cgroup 2>/dev/null); then
+    IS_PTERODACTYL=true
+fi
 
 # Auto-detect mode
-if [ "$MODE" = "auto" ]; then
+# If in Pterodactyl, force Python 3.12
+if [ "$IS_PTERODACTYL" = true ]; then
+  echo "🦖 Pterodactyl environment detected - using Python 3.12"
+  PYTHON_BIN="python3.12"
+  PIP_BIN="pip3.12"
+else
+  # Normal auto-detection
   # Detect Python
   if command -v python3 &>/dev/null; then
       PYTHON_BIN="python3"
@@ -57,7 +41,6 @@ fi
 
 echo "🐍 Using Python: $PYTHON_BIN"
 echo "📦 Using Pip: $PIP_BIN"
-echo "------------------------------------"
 
 # Install Python dependencies
 $PIP_BIN install -r api/parserapi/requirements.txt || {
@@ -66,6 +49,11 @@ $PIP_BIN install -r api/parserapi/requirements.txt || {
 }
 
 # Start ParserAPI
+cd api || {
+    echo "❌ Failed to navigate to api directory"
+    exit 1
+}
+
 $PYTHON_BIN -m parserapi || {
     echo "❌ Failed to start API"
     exit 1

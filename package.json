@@ -19,8 +19,8 @@
   "description": "RSS-ify brings you the latest updates from your favorite feeds right into Telegram, hassle-free!",
   "main": "bot.mjs",
   "scripts": {
-    "start": "./start -c && npm install concurrently && npm install && npm run bot",
-    "bot": "node bot.mjs"
+    "start": "./start -c",
+    "dev": "./start"
   },
   "repository": {
     "type": "git",
