@@ -22,17 +22,16 @@ cd rssify
 
 clean start with git pull
 ```
-bash start.sh -c 
+./start -c     # Setup and run everything (with repo update)
 ```
-dirty run with git pull
+``` 
+./start        # Run everything (without repo update) 
 ```
-bash start.sh -d 
+Or use npm
 ```
-start rssify directly
+npm start      # with update
+npm run dev    # without update
 ```
-bash  start.sh
-```
-
 ### Using the official bot instance
 
 The [RSS-ify bot](https://t.me/rssifyxbot) comes with absolute no warranty. I will try my best to maintain it, but I won't guarantee that it will always work perfectly. Meanwhile, you should "fair use" the bot, avoid subscribing to too many RSS feeds.
