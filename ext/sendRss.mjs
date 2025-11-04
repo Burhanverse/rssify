@@ -1,4 +1,4 @@
-import { Bot } from 'grammy';
+import { Bot, InlineKeyboard } from 'grammy';
 import dotenv from 'dotenv';
 import { log } from './utils/colorLog.mjs';
 import { fetchRss } from './utils/parserApi.mjs';
@@ -86,13 +86,17 @@ export const sendRssUpdates = async () => {
                         continue;
                     }
 
-                    const message = `<b>${escapeHTML(item.title)}</b>\n\n` +
-                        `<a href="${escapeHTML(item.link)}"><i>Source</i></a>`;
+                    const message = `<b>${escapeHTML(item.title)}</b><a href="${escapeHTML(item.link)}">​</a>`;
+
+                    // inline keyboard with Source button
+                    const keyboard = new InlineKeyboard()
+                        .url('Source', item.link);
 
                     try {
                         await rateLimitSending(chatId, async () => {
                             return await bot.api.sendMessage(chatId, message, {
                                 parse_mode: 'HTML',
+                                reply_markup: keyboard,
                                 ...(topicId && { message_thread_id: parseInt(topicId) }),
                             });
                         });

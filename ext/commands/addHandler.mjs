@@ -1,4 +1,4 @@
-import { Bot } from 'grammy';
+import { Bot, InlineKeyboard } from 'grammy';
 import dotenv from 'dotenv';
 import { fetchRss } from "../utils/parserApi.mjs";
 import { chatCollection } from "../utils/db.mjs";
@@ -40,15 +40,20 @@ export const addCmd = async (ctx) => {
     ctx.reply(`<i>Feed added</i>: ${escapeHTML(rssUrl)}`, {
       parse_mode: 'HTML',
       disable_web_page_preview: true,
-    });
+    }); inlin
 
     const latestItem = items[0];
     await updateLastLog(chatId, rssUrl, [latestItem]);
 
-    const message = `<b>${escapeHTML(latestItem.title)}</b>\n\n` +
-      `<a href="${escapeHTML(latestItem.link)}"><i>Source</i></a>`;
+    const message = `<b>${escapeHTML(latestItem.title)}</b><a href="${escapeHTML(latestItem.link)}">​</a>`;
+    
+    // inline keyboard with Source button
+    const keyboard = new InlineKeyboard()
+      .url('Source', latestItem.link);
+    
     await bot.api.sendMessage(chatId, message, {
       parse_mode: 'HTML',
+      reply_markup: keyboard,
       ...(ctx.message.message_thread_id && { message_thread_id: parseInt(ctx.message.message_thread_id) }),
     });
     log.success(`Chat ${chatId} added a new feed URL: ${rssUrl}`);
