@@ -9,7 +9,6 @@ import { cleanCmd } from "./ext/commands/cleanHandler.mjs";
 import { startCmd } from './ext/commands/startHandler.mjs';
 import { statsCmd } from './ext/commands/statsHandler.mjs';
 import { aboutCmd } from './ext/commands/aboutHandler.mjs';
-import { createSubscriptionMiddleware } from './ext/utils/isSubscribed.mjs';
 import { delAllCmd } from './ext/commands/delAllHandler.mjs';
 import { alertSender } from './ext/commands/alertSender.mjs';
 import { pauseCmd, resumeCmd } from './ext/commands/feedHandler.mjs';
@@ -24,8 +23,6 @@ const BOT_TOKEN = process.env.TOKEN;
 
 // Initialize bot
 const bot = new Bot(BOT_TOKEN);
-
-const checkSubs = createSubscriptionMiddleware(bot);
 
 process.once('SIGINT', () => bot.stop('SIGINT'));
 process.once('SIGTERM', () => bot.stop('SIGTERM'));
@@ -49,21 +46,21 @@ await bot.api.setMyCommands([
 ]);
 
 bot.use(handleThreadId);
-bot.command('send', checkSubs, alertSender);
-bot.command('stats', checkSubs, spamProtection, statsCmd);
-bot.command('about', checkSubs, spamProtection, aboutCmd);
-bot.command('clean', checkSubs, spamProtection, cleanCmd);
-bot.command('del', checkSubs, spamProtection, isAdmin, delCmd);
-bot.command('set', checkSubs, spamProtection, isAdmin, setCmd);
-bot.command('pause', checkSubs, spamProtection, isAdmin, pauseCmd);
-bot.command('start', checkSubs, spamProtection, isAdmin, startCmd);
-bot.command('list', checkSubs, spamProtection, isAdmin, handleList);
-bot.command('resume', checkSubs, spamProtection, isAdmin, resumeCmd);
-bot.command('del_all', checkSubs, spamProtection, isAdmin, delAllCmd);
-bot.command('export', checkSubs, spamProtection, isAdmin, handleExport);
-bot.command('import', checkSubs, spamProtection, isAdmin, handleImport);
-bot.command('add', checkSubs, checkFeedLimit, spamProtection, isAdmin, adultContentFilter, addCmd);
-bot.callbackQuery(/^list_(prev|next)_(\d+)$/, checkSubs, spamProtection, isAdmin, handlePagination);
+bot.command('send', alertSender);
+bot.command('stats', spamProtection, statsCmd);
+bot.command('about', spamProtection, aboutCmd);
+bot.command('clean', spamProtection, cleanCmd);
+bot.command('del', spamProtection, isAdmin, delCmd);
+bot.command('set', spamProtection, isAdmin, setCmd);
+bot.command('pause', spamProtection, isAdmin, pauseCmd);
+bot.command('start', spamProtection, isAdmin, startCmd);
+bot.command('list', spamProtection, isAdmin, handleList);
+bot.command('resume', spamProtection, isAdmin, resumeCmd);
+bot.command('del_all', spamProtection, isAdmin, delAllCmd);
+bot.command('export', spamProtection, isAdmin, handleExport);
+bot.command('import', spamProtection, isAdmin, handleImport);
+bot.command('add', checkFeedLimit, spamProtection, isAdmin, adultContentFilter, addCmd);
+bot.callbackQuery(/^list_(prev|next)_(\d+)$/, spamProtection, isAdmin, handlePagination);
 (async () => {
   await connectDB();
   startCycle();
