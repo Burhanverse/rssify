@@ -40,7 +40,7 @@ export const addCmd = async (ctx) => {
     ctx.reply(`<i>Feed added</i>: ${escapeHTML(rssUrl)}`, {
       parse_mode: 'HTML',
       disable_web_page_preview: true,
-    }); inlin
+    });
 
     const latestItem = items[0];
     await updateLastLog(chatId, rssUrl, [latestItem]);
