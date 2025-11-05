@@ -113,4 +113,4 @@ cd api || {
 }
 
 echo "🚀 Starting API server..."
-$PYTHON_BIN -m parserapi
+$PYTHON_BIN -m uvicorn parserapi.api:parserapi --host 0.0.0.0 --port 5000

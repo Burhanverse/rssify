@@ -6,8 +6,15 @@ export const fetchRss = async (rssUrl) => {
     const response = await axios.get('http://127.0.0.1:5000/parse', {
       params: { url: rssUrl },
     });
+    
+    // New API structure returns { feed, items, source }
     return response.data.items;
   } catch (error) {
-    throw new Error(error.response?.data?.error || 'Failed to fetch RSS feed');
+    // Handle new error format from FastAPI
+    const errorMessage = error.response?.data?.detail || 
+                         error.response?.data?.error || 
+                         error.message || 
+                         'Failed to fetch RSS feed';
+    throw new Error(errorMessage);
   }
 };
