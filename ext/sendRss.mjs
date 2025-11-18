@@ -28,6 +28,8 @@ export const sendRssUpdates = async () => {
         } catch (err) {
             log.error(`Failed to fetch ${url}:`, err.message);
             feedCache.set(url, []);
+        } finally {
+            await delay(2000); // avoid flooding parser API
         }
     }
 
