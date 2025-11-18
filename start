@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "🚀 Starting RSS-ify Setup..."
+echo "🚀 Starting RSS-ify..."
 echo "======================================"
 
 # Update repository if -c flag is provided
@@ -10,7 +10,6 @@ update_repo() {
     git pull --force
     git submodule update --init --recursive
     echo "✅ Repository updated"
-    echo "======================================"
 }
 
 if [[ "$1" == "-c" ]]; then
@@ -24,30 +23,6 @@ npm install || {
     exit 1
 }
 echo "✅ Node.js dependencies installed"
-echo "======================================"
-
-# Start Python API in background
-echo "🐍 Starting Python API..."
-bash api.sh > /tmp/api.log 2>&1 &
-API_PID=$!
-
-# Wait for API to be ready
-echo "⏳ Waiting for API to be ready..."
-for i in {1..90}; do
-    if curl -s http://localhost:5000/health >/dev/null 2>&1; then
-        echo "✅ API is running and ready!"
-        break
-    fi
-    sleep 2
-    if [ $i -eq 90 ]; then
-        echo "❌ API failed to start within 3 minutes"
-        echo "📋 Last 30 lines of API log:"
-        tail -30 /tmp/api.log
-        exit 1
-    fi
-done
-
-echo "======================================"
 
 # Activate venv if it exists
 if [ -d "api/venv" ]; then
