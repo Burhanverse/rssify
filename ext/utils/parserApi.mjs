@@ -1,14 +1,23 @@
 import axios from 'axios';
 
-// Fetch RSS feeds using ParserAPI
+// Fetch RSS feeds using ParserAPI and normalize response to an array
 export const fetchRss = async (rssUrl) => {
   try {
     const response = await axios.get('http://dono-03.danbot.host:2058/parse', {
       params: { url: rssUrl },
     });
-    
-    // API returns array of items directly [{ title, link }, ...]
-    return response.data;
+
+    const data = response.data;
+
+    if (Array.isArray(data)) {
+      return data;
+    }
+
+    if (Array.isArray(data?.items)) {
+      return data.items;
+    }
+
+    throw new Error('Parser API returned no items');
   } catch (error) {
     // Handle new error format from FastAPI
     const errorMessage = error.response?.data?.detail || 

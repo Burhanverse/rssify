@@ -52,7 +52,7 @@ export const sendRssUpdates = async () => {
             }
 
             const cachedItems = feedCache.get(rssUrl);
-            if (!cachedItems || cachedItems.length === 0) continue;
+            if (!Array.isArray(cachedItems) || cachedItems.length === 0) continue;
 
             try {
                 const lastLog = await getLastLog(chatId, rssUrl);
